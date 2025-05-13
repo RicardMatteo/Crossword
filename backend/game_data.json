@@ -1,0 +1,508 @@
+{
+    "grid_structure": [
+        "#-#-#-#-#-#-#-",
+        "--------#-----",
+        "#--#-------#--",
+        "------#---#---",
+        "##---#---#----",
+        "-------------#",
+        "#--#---#---#--",
+        "----#---------",
+        "#----#---#----"
+    ],
+    "solution_grid": [
+        "#T#I#O#R#O#V#L",
+        "NUISANCE#TASSA",
+        "#BR#ECOSSER#AI",
+        "TARARE#SIR#TIR",
+        "##III#SAM#HAND",
+        "ENTRELACEMENT#",
+        "#AA#NIL#NON#DI",
+        "INNE#ESTOURBIR",
+        "#ATRE#AIN#IDEM"
+    ],
+    "grid_def_order": [
+        [1, 8],
+        [2, 9],
+        [3, 10],
+        [4, 11],
+        [5],
+        [6, 13],
+        [7, 14],
+        [12, 17],
+        [15, 19],
+        [16, 20],
+        [18, 22],
+        [21, 24],
+        [25, 22],
+        [26],
+        [23, 27],
+        [24, 28],
+        [25, 29],
+        [34],
+        [30],
+        [31, 36],
+        [32, 38],
+        [33, 39],
+        [37],
+        [40],
+        [41],
+        [42]
+    ],
+    "placed_words": [
+        {
+            "word": "TUBA",
+            "clue": "DANS LES CUIVRES",
+            "row": 0,
+            "col": 1,
+            "direction": "V",
+            "length": 4,
+            "number": 1
+        },
+        {
+            "word": "IS",
+            "clue": "CITÉ BOURGUIGNONN  SITUÉE SUR-TILLE",
+            "row": 0,
+            "col": 3,
+            "direction": "V",
+            "length": 2,
+            "number": 2
+        },
+        {
+            "word": "ONCE",
+            "clue": "MESURE PLEINE DE BON SENS",
+            "row": 0,
+            "col": 5,
+            "direction": "V",
+            "length": 4,
+            "number": 3
+        },
+        {
+            "word": "RESSAC",
+            "clue": "DÉFERLEMENT DES VAGUES",
+            "row": 0,
+            "col": 7,
+            "direction": "V",
+            "length": 6,
+            "number": 4
+        },
+        {
+            "word": "OTER",
+            "clue": "RAVIR",
+            "row": 0,
+            "col": 9,
+            "direction": "V",
+            "length": 4,
+            "number": 5
+        },
+        {
+            "word": "VS",
+            "clue": "VERSUS",
+            "row": 0,
+            "col": 11,
+            "direction": "V",
+            "length": 2,
+            "number": 6
+        },
+        {
+            "word": "LAIRD",
+            "clue": "LORD ÉCOSSAIS",
+            "row": 0,
+            "col": 13,
+            "direction": "V",
+            "length": 5,
+            "number": 7
+        },
+        {
+            "word": "NUISANCE",
+            "clue": "FACTEUR DE GÊNE",
+            "row": 1,
+            "col": 0,
+            "direction": "H",
+            "length": 8,
+            "number": 8
+        },
+        {
+            "word": "IRRITANT",
+            "clue": "ÉNERVANT",
+            "row": 1,
+            "col": 2,
+            "direction": "V",
+            "length": 8,
+            "number": 9
+        },
+        {
+            "word": "AERIEN",
+            "clue": "À L'AIR LIBRE",
+            "row": 1,
+            "col": 4,
+            "direction": "V",
+            "length": 6,
+            "number": 10
+        },
+        {
+            "word": "CO",
+            "clue": "POUR FAIRE AVEC",
+            "row": 1,
+            "col": 6,
+            "direction": "V",
+            "length": 2,
+            "number": 11
+        },
+        {
+            "word": "TASSA",
+            "clue": "COMPRIMA",
+            "row": 1,
+            "col": 9,
+            "direction": "H",
+            "length": 5,
+            "number": 12
+        },
+        {
+            "word": "AR",
+            "clue": "COURT ALLER-RETOUR",
+            "row": 1,
+            "col": 10,
+            "direction": "V",
+            "length": 2,
+            "number": 13
+        },
+        {
+            "word": "SAINTDIE",
+            "clue": "BERCEAU DE JULES FERRY",
+            "row": 1,
+            "col": 12,
+            "direction": "V",
+            "length": 8,
+            "number": 14
+        },
+        {
+            "word": "BR",
+            "clue": "BROME",
+            "row": 2,
+            "col": 1,
+            "direction": "H",
+            "length": 2,
+            "number": 15
+        },
+        {
+            "word": "ECOSSER",
+            "clue": "ÉPLUCHER DES POIS",
+            "row": 2,
+            "col": 4,
+            "direction": "H",
+            "length": 7,
+            "number": 16
+        },
+        {
+            "word": "SIMENON",
+            "clue": "PÈRE DE MAIGRET",
+            "row": 2,
+            "col": 8,
+            "direction": "V",
+            "length": 7,
+            "number": 17
+        },
+        {
+            "word": "AI",
+            "clue": "BÊTE ET PARESSEUX À LA FOIS",
+            "row": 2,
+            "col": 12,
+            "direction": "H",
+            "length": 2,
+            "number": 18
+        },
+        {
+            "word": "TARARE",
+            "clue": "VANNEUSE",
+            "row": 3,
+            "col": 0,
+            "direction": "H",
+            "length": 6,
+            "number": 19
+        },
+        {
+            "word": "AIR",
+            "clue": "ASPECT GÉNÉRAL",
+            "row": 3,
+            "col": 3,
+            "direction": "V",
+            "length": 3,
+            "number": 20
+        },
+        {
+            "word": "SIR",
+            "clue": "TITRE ANGLAIS",
+            "row": 3,
+            "col": 7,
+            "direction": "H",
+            "length": 3,
+            "number": 21
+        },
+        {
+            "word": "TAN",
+            "clue": "POUDRE D'ÉCORCE",
+            "row": 3,
+            "col": 11,
+            "direction": "V",
+            "length": 3,
+            "number": 22
+        },
+        {
+            "word": "TIR",
+            "clue": "IL A SON STAND À LA FÊTE",
+            "row": 3,
+            "col": 11,
+            "direction": "H",
+            "length": 3,
+            "number": 22
+        },
+        {
+            "word": "III",
+            "clue": "TROIS EN CHIFFRES ROMAINS",
+            "row": 4,
+            "col": 2,
+            "direction": "H",
+            "length": 3,
+            "number": 23
+        },
+        {
+            "word": "SAM",
+            "clue": "DIMINUTIF DE SAMUEL",
+            "row": 4,
+            "col": 6,
+            "direction": "H",
+            "length": 3,
+            "number": 24
+        },
+        {
+            "word": "SALSA",
+            "clue": "DANSE AFRO-CUBAINE",
+            "row": 4,
+            "col": 6,
+            "direction": "V",
+            "length": 5,
+            "number": 24
+        },
+        {
+            "word": "HENRI",
+            "clue": "PRÉNOM DE ROIS",
+            "row": 4,
+            "col": 10,
+            "direction": "V",
+            "length": 5,
+            "number": 25
+        },
+        {
+            "word": "HAND",
+            "clue": "SPORT D'ÉQUIPE",
+            "row": 4,
+            "col": 10,
+            "direction": "H",
+            "length": 4,
+            "number": 25
+        },
+        {
+            "word": "ENTRELACEMENT",
+            "clue": "RÉSEAU HARMONIEUX",
+            "row": 5,
+            "col": 0,
+            "direction": "H",
+            "length": 13,
+            "number": 26
+        },
+        {
+            "word": "NANA",
+            "clue": "ELLE EST PROCHE DU MEC",
+            "row": 5,
+            "col": 1,
+            "direction": "V",
+            "length": 4,
+            "number": 27
+        },
+        {
+            "word": "LIE",
+            "clue": "DÉPÔT SANS INTÉRÊT",
+            "row": 5,
+            "col": 5,
+            "direction": "V",
+            "length": 3,
+            "number": 28
+        },
+        {
+            "word": "MOU",
+            "clue": "ABATS POUR LE CHAT",
+            "row": 5,
+            "col": 9,
+            "direction": "V",
+            "length": 3,
+            "number": 29
+        },
+        {
+            "word": "AA",
+            "clue": "COURS EN FLANDRE",
+            "row": 6,
+            "col": 1,
+            "direction": "H",
+            "length": 2,
+            "number": 30
+        },
+        {
+            "word": "NIL",
+            "clue": "FLEUVE AFRICAIN",
+            "row": 6,
+            "col": 4,
+            "direction": "H",
+            "length": 3,
+            "number": 31
+        },
+        {
+            "word": "NON",
+            "clue": "MOT POUR DÉCLINER",
+            "row": 6,
+            "col": 8,
+            "direction": "H",
+            "length": 3,
+            "number": 32
+        },
+        {
+            "word": "DI",
+            "clue": "DÉFUNTE LADY",
+            "row": 6,
+            "col": 12,
+            "direction": "H",
+            "length": 2,
+            "number": 33
+        },
+        {
+            "word": "IRM",
+            "clue": "IMAGERIE NUCLÉAIRE",
+            "row": 6,
+            "col": 13,
+            "direction": "V",
+            "length": 3,
+            "number": 34
+        },
+        {
+            "word": "INNE",
+            "clue": "DE NAISSANCE",
+            "row": 7,
+            "col": 0,
+            "direction": "H",
+            "length": 4,
+            "number": 35
+        },
+        {
+            "word": "ER",
+            "clue": "TERMINAISON DE VERBE",
+            "row": 7,
+            "col": 3,
+            "direction": "V",
+            "length": 2,
+            "number": 36
+        },
+        {
+            "word": "ESTOURBIR",
+            "clue": "ASSOMMER",
+            "row": 7,
+            "col": 5,
+            "direction": "H",
+            "length": 9,
+            "number": 37
+        },
+        {
+            "word": "TI",
+            "clue": "TITANE EN SYMBOLE",
+            "row": 7,
+            "col": 7,
+            "direction": "V",
+            "length": 2,
+            "number": 38
+        },
+        {
+            "word": "BD",
+            "clue": "ART D'HERGÉ",
+            "row": 7,
+            "col": 11,
+            "direction": "V",
+            "length": 2,
+            "number": 39
+        },
+        {
+            "word": "ATRE",
+            "clue": "COIN DE CHEMINÉE",
+            "row": 8,
+            "col": 1,
+            "direction": "H",
+            "length": 4,
+            "number": 40
+        },
+        {
+            "word": "AIN",
+            "clue": "AFFLUENT DU RHÔNE",
+            "row": 8,
+            "col": 6,
+            "direction": "H",
+            "length": 3,
+            "number": 41
+        },
+        {
+            "word": "IDEM",
+            "clue": "DE MÊME",
+            "row": 8,
+            "col": 10,
+            "direction": "H",
+            "length": 4,
+            "number": 42
+        }
+    ],
+    "definitions_horizontal": [
+        "8. FACTEUR DE GÊNE",
+        "12. COMPRIMA",
+        "15. BROME",
+        "16. ÉPLUCHER DES POIS",
+        "18. BÊTE ET PARESSEUX À LA FOIS",
+        "19. VANNEUSE",
+        "21. TITRE ANGLAIS",
+        "22. IL A SON STAND À LA FÊTE",
+        "23. TROIS EN CHIFFRES ROMAINS",
+        "24. DIMINUTIF DE SAMUEL",
+        "25. SPORT D'ÉQUIPE",
+        "26. RÉSEAU HARMONIEUX",
+        "30. COURS EN FLANDRE",
+        "31. FLEUVE AFRICAIN",
+        "32. MOT POUR DÉCLINER",
+        "33. DÉFUNTE LADY",
+        "35. DE NAISSANCE",
+        "37. ASSOMMER",
+        "40. COIN DE CHEMINÉE",
+        "41. AFFLUENT DU RHÔNE",
+        "42. DE MÊME"
+    ],
+    "definitions_vertical": [
+        "1. DANS LES CUIVRES",
+        "2. CITÉ BOURGUIGNONN  SITUÉE SUR-TILLE",
+        "3. MESURE PLEINE DE BON SENS",
+        "4. DÉFERLEMENT DES VAGUES",
+        "5. RAVIR",
+        "6. VERSUS",
+        "7. LORD ÉCOSSAIS",
+        "9. ÉNERVANT",
+        "10. À L'AIR LIBRE",
+        "11. POUR FAIRE AVEC",
+        "13. COURT ALLER-RETOUR",
+        "14. BERCEAU DE JULES FERRY",
+        "17. PÈRE DE MAIGRET",
+        "20. ASPECT GÉNÉRAL",
+        "22. POUDRE D'ÉCORCE",
+        "24. DANSE AFRO-CUBAINE",
+        "25. PRÉNOM DE ROIS",
+        "27. ELLE EST PROCHE DU MEC",
+        "28. DÉPÔT SANS INTÉRÊT",
+        "29. ABATS POUR LE CHAT",
+        "34. IMAGERIE NUCLÉAIRE",
+        "36. TERMINAISON DE VERBE",
+        "38. TITANE EN SYMBOLE",
+        "39. ART D'HERGÉ"
+    ]
+}
