@@ -50,25 +50,25 @@ export default function CrosswordPage({ roomId }) {
                 }
                 setGridClueOrder(clueGrid);
 
+
                 const defMap = {};
-                [...data.definitions_horizontal, ...data.definitions_vertical].forEach(d => {
+                [...data.definitions_horizontal, ...data.definitions_vertical].forEach((d, index) => {
+                    const direction = index < data.definitions_horizontal.length ? 'H' : 'V';
                     const num = d.split('.')[0].trim();
                     const text = d.split('.').slice(1).join('.').trim();
-                    defMap[num] = text;
+                    const key = `${num}${direction}`;
+
+                    defMap[key] = text;
                     setDefinitionMap(defMap);
                 });
             } catch (error) {
                 // Handle error (e.g., show error message to user)
+                console.error("Error loading grid data:", error);
             }
         };
 
         loadGrid();
     }, []);
-
-
-    useEffect(() => {
-        console.log("Grid structure (after update):", inputGrid);
-    }, [inputGrid]); 
 
     async function hashWord(word) {
         const encoder = new TextEncoder();
