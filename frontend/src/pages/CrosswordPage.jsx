@@ -264,7 +264,7 @@ export default function CrosswordPage({ roomId }) {
     }
 
     const setInValidDirection = (row, col) => {
-        if (!isLongEnough(inputGrid, row, col)) {
+        if (!isLongEnough(inputGrid, row, col, direction)) {
             // If the word is not long enough, set the direction to the opposite
             setDirection(direction === 'H' ? 'V' : 'H');
         }
