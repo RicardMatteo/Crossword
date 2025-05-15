@@ -86,9 +86,11 @@ function InputCell({ cell, rowIndex, colIndex, inputRefs, handleKeyDown, onFocus
             maxLength={1}
             value={cell || ''}
             ref={inputRefs.current[rowIndex][colIndex]}
-            onChange={(e) => { // for mobile
-                const syntheticEvent = { ...e, key: e.target.value.slice(-1) };
-                handleKeyDown(syntheticEvent, rowIndex, colIndex);
+            onChange={(e) => {
+                if (navigator.userAgent.toLowerCase().includes('mobile')) {
+                    const syntheticEvent = { ...e, key: e.target.value.slice(-1) };
+                    handleKeyDown(syntheticEvent, rowIndex, colIndex);
+                }
             }}
             onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
             onClick={() => onFocus(rowIndex, colIndex)}
@@ -115,24 +117,11 @@ export default function CrosswordGridDisplay({
     isInFocusedWord,
     definitionMap
 }) {
-    console.log("Props to CrosswordGridDisplay:", {
-        gridStructure,
-        inputGrid,
-        gridClueOrder,
-        inputRefs,
-        focusedCell,
-        handleKeyDown,
-        onFocus,
-        isInFocusedWord,
-        definitionMap
-    });
-
     return (
         <div lang='fr' style={{ display: 'inline-block', marginBottom: '2rem' }}>
             {gridStructure.map((row, rowIndex) => (
                 <div key={rowIndex} style={{ display: 'flex' }}>
                     {row.map((cell, colIndex) => {
-                        console.log("Cell:", cell, "colIndex:", colIndex);
                         const isFocused = focusedCell.row === rowIndex && focusedCell.col === colIndex;
                         const isInWord = isInFocusedWord(rowIndex, colIndex);
 

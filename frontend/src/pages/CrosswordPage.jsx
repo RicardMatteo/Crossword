@@ -110,7 +110,7 @@ export default function CrosswordPage({ roomId }) {
                     });
 
                     if (result.valid) {
-                        freezeWord(match);
+                        freezeWord(match, word);
                         if (window.ws?.readyState === WebSocket.OPEN) {
                             console.log("WebSocket ouverte, envoi de word_validated");
                             window.ws.send(JSON.stringify({
@@ -131,7 +131,7 @@ export default function CrosswordPage({ roomId }) {
         }
     }
 
-    function freezeWord(wordData) {
+    function freezeWord(wordData, word) {
         const { row, col, direction, length } = wordData;
 
         for (let i = 0; i < length; i++) {
@@ -141,7 +141,8 @@ export default function CrosswordPage({ roomId }) {
             const ref = inputRefs.current[r][c];
             if (ref?.current) {
                 ref.current.readOnly = true;
-                ref.current.style.color = 'teal'; // Bleu pour le texte
+                ref.current.style.color = 'teal'; 
+                ref.current.value = word[i].toUpperCase(); // To prevent the value from being changed before the freeze
             }
         }
     }

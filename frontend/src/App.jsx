@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-// import CrosswordGrid from './components/CrosswordGrid';
 import CrosswordPage from './pages/CrossWordPage';
+
 
 export default function App() {
   const [roomId, setRoomId] = useState('');
@@ -13,15 +13,19 @@ export default function App() {
 
   // Redirection automatique si room dans l’URL et token/nom déjà présents
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(`token-${roomFromURL}`);
     const storedName = localStorage.getItem('name');
 
     if (roomFromURL) {
-      if (token && storedName) {
+
+      if ((token && storedName) || (joined && roomId === roomFromURL)) {
+        console.log('Token et nom trouvés, redirection vers la page de jeu');
         setRoomId(roomFromURL);
         setName(storedName);
         setJoined(true);
+        navigate(`/game/${roomFromURL}`);
       } else {
+        console.log('Token ou nom manquant, redirection vers la page d\'accueil');
         setJoined(false);
         navigate('/');
       }
@@ -71,7 +75,7 @@ export default function App() {
         </div>
       ) : (
         <div>
-          <CrosswordPage roomId={roomId} playerName={name} />
+          <CrosswordPage roomId={roomId} name={name} />
         </div>
       )}
     </div>

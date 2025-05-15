@@ -38,8 +38,10 @@ const useWebSocket = (roomId, playerName) => {
                 console.log("WebSocket message received:", msg.type);
 
                 if (msg.type === "token") {
-                    localStorage.setItem("token", msg.token);
+                    localStorage.setItem(`token-${msg.room_id}`, msg.token);
+                    console.log("Token reçu et stocké:", msg.token, msg.room_id);
                     setToken(msg.token);
+                    
                 } else if (msg.type === "player_progress") {
                     setProgressOtherPlayers(prev => ({
                         ...prev,

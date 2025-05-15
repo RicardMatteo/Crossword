@@ -154,8 +154,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
     room["players"][token] = websocket
 
+    print(f"Player {name} with token {token} connected to room {room_id}")
     # Envoie du token pour persistance côté client
-    await websocket.send_json({"type": "token", "token": token})
+    await websocket.send_json({"type": "token", "token": token, "room_id": room_id})
 
     # Envoie de la progression des autres joueurs
     for other_token, progress in room["progress"].items():
