@@ -1,8 +1,11 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-RUN pip install poetry
+RUN pip install poetry --no-cache-dir
+
+WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
 
@@ -15,4 +18,3 @@ COPY game_data.json ./
 EXPOSE 8000
 
 CMD ["poetry", "run", "start"]
-

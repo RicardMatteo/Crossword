@@ -1,20 +1,11 @@
 services:
   crossword-backend:
     build: ./backend
-    volumes:
-      - ./backend/src:/app/src
-    environment:
-      - PYTHONUNBUFFERED=1
-    expose:
-      - "8000"
 
   crossword-frontend:
     build: ./frontend
     ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - 5173:5173
     environment:
       - VITE_BACKEND_ORIGIN=crossword-backend:8000
     depends_on:
