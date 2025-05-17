@@ -12,31 +12,23 @@ export default defineConfig(({ mode }) => {
   }
 
   let backendOrigin = process.env.VITE_BACKEND_ORIGIN;
-  backendOrigin = "192.168.68.58:8000";
+  backendOrigin = "nin7o.net:8000";
   console.log('VITE_BACKEND_ORIGIN:', backendOrigin);
   
   if (!backendOrigin) {
     throw new Error('VITE_BACKEND_ORIGIN is not defined. Please set it in your .env file.');
   }
 
-  if (!fs.existsSync('./ssl/localhost-key.pem') || !fs.existsSync('./ssl/localhost.pem')) {
-    throw new Error('SSL certificates not found. Please generate them using mkcert.');
-  }
-
-  const httpsOptions = {
-    key : fs.readFileSync('./ssl/localhost-key.pem'),
-    cert: fs.readFileSync('./ssl/localhost.pem'),
-  };
 
   return{
     plugins: [react()],
     server: {
 
-      https: httpsOptions,
       host: '0.0.0.0',
       port: 5173,
-
-  
+      allowedHosts: [
+        'mots.nin7o.net'
+      ],
       proxy: {
         '/api': {
           target: `https://${backendOrigin}`,

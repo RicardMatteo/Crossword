@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import CrosswordPage from './pages/CrossWordPage';
+import CrosswordPage from './pages/CrosswordPage';
 
 
 export default function App() {
