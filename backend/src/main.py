@@ -57,7 +57,7 @@ for word in game_data["placed_words"]:
     word["hash"] = hashlib.sha256(word["word"].encode()).hexdigest()
 
 def run_app():
-    uvicorn.run("main:app", host="0.0.0.0", port=8454, reload=True)
+    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
 
 
 @app.get("/api/grid")
