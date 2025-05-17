@@ -76,13 +76,19 @@ class WordAttempt(BaseModel):
     col: int
     direction: str
     guess: str
+    token: str
 
 @app.post("/api/submit_word")
 async def submit_word(attempt: WordAttempt):
     """Soumet une tentative de mot et retourne si elle est correcte."""
     for word in game_data["placed_words"]:
         if (word["row"], word["col"], word["direction"]) == (attempt.row, attempt.col, attempt.direction):
-            return {"valid": word["word"].upper() == attempt.guess.upper()}
+            # Vérification du mot
+            print(f"Word: {attempt.guess}, Expected: {word['word']}")
+            if word["word"] == attempt.guess:
+                # Envoie la progression aux autres joueurs
+                await validate_word(attempt)  
+                return {"valid": True}
     return {"error": "Unknown word location"}
 
 @app.post("/api/submit_word_hash")
@@ -90,34 +96,13 @@ async def submit_word_hash(attempt: WordAttempt):
     """Soumet une tentative de mot et retourne si elle est correcte."""
     for word in game_data["placed_words"]:
         if (word["row"], word["col"], word["direction"]) == (attempt.row, attempt.col, attempt.direction):
-            return {"valid": word["hash"] == hashlib.sha256(attempt.guess.encode()).hexdigest()}
+            # Vérification du hash
+            print(f"Hash: {hashlib.sha256(attempt.guess.encode()).hexdigest()}, Expected: {word['hash']}")
+            if word["hash"] == hashlib.sha256(attempt.guess.encode()).hexdigest():
+                # Envoie la progression aux autres joueurs
+                await validate_word(attempt)  
+                return {"valid": True}
     return {"error": "Unknown word location"}
-
-"""
-@app.websocket("/ws/{room_id}/{player}")
-async def websocket_endpoint(websocket: WebSocket, room_id: str, player: str):
-    await websocket.accept()
-    room = ROOMS.setdefault(room_id, {"players": {}, "grid": game_data})
-    room["players"][player] = websocket
-
-    try:
-        while True:
-            data = await websocket.receive_json()
-            if data["type"] == "word_validated":
-                # Broadcast to all other players
-                for name, sock in room["players"].items():
-                    if name != player:
-                        await sock.send_json({
-                            "type": "player_progress",
-                            "from": player,
-                            "row": data["row"],
-                            "col": data["col"],
-                            "direction": data["direction"],
-                            "length": data["length"]
-                        })
-    except WebSocketDisconnect:
-        del room["players"][player]
-"""
 
 @app.websocket("/ws/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
@@ -138,13 +123,14 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             "players": {},       # token → websocket
             "names": {},         # token → name
             "progress": {},      # token → [[bool, ...], ...]
+            "is_connected": {},  # token → bool
         }
 
     room = ROOMS[room_id]
 
 
     # Création d’un token si nouveau joueur
-    if not token or token not in room["names"]:
+    if not token: # or token not in room["names"]:
         token = str(uuid.uuid4())
         room["names"][token] = name
         room["progress"][token] = [
@@ -153,19 +139,32 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         ]
 
     room["players"][token] = websocket
+    room["is_connected"][token] = True
 
     print(f"Player {name} with token {token} connected to room {room_id}")
     # Envoie du token pour persistance côté client
     await websocket.send_json({"type": "token", "token": token, "room_id": room_id})
 
-    # Envoie de la progression des autres joueurs
+    # Envoie de la progression des autres joueurs 
     for other_token, progress in room["progress"].items():
+        # Check if the player is connected
+        if not room["is_connected"][other_token]:
+            continue
         if other_token != token:
             await websocket.send_json({
                 "type": "player_progress",
                 "from": room["names"][other_token],
                 "progress": progress
             })
+            # Envoie de sa propre progression
+            ws = room["players"][other_token]
+            await ws.send_json({
+                "type": "player_progress",
+                "from": room["names"][token],
+                "progress": room["progress"][token]
+            })
+
+    # Envoie de sa propre progression aux autres joueurs
 
     # Envoie de sa propre progression (pour reconnexion)
     await websocket.send_json({
@@ -188,24 +187,80 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     room["progress"][token][r][c] = True
 
                 # Broadcast aux autres
-                for tkn, ws in room["players"].items():
-                    if tkn != token:
-                        await ws.send_json({
-                            "type": "player_progress",
-                            "from": room["names"][token],
-                            "progress": room["progress"][token]
-                        })
+                await send_message_to_all_except(
+                    room,
+                    token,
+                    {
+                        "type": "player_progress",
+                        "from": room["names"][token],
+                        "progress": room["progress"][token]
+                    }
+                )
+            
     except WebSocketDisconnect:
         try:
-            if token in room["players"]: # Vérifier d'abord si la clé existe
-                del room["players"][token]
-                print(f"Player with token {token} removed from room {room_id}")
-            # Ou utiliser pop qui ne lève pas d'erreur si la clé manque:
-            # removed_player = room["players"].pop(token, None) # None si clé absente
-            # if removed_player:
-            #    print(f"Player with token {token} removed from room {room_id}")
-
-            # Mettre à jour les autres joueurs si nécessaire
-            # await manager.broadcast(...)
+            if token in room["players"]:
+                room["is_connected"][token] = False
+                print(f"Player {room['names'][token]} with token {token} disconnected from room {room_id}")
+                # broadcast to other players
+                await send_message_to_all_except(
+                    room,
+                    token,
+                    {
+                        "type": "player_disconnected",
+                        "from": room["names"][token]
+                    }
+                )
         except Exception as e:
             print(f"Error during cleanup for token {token} in room {room_id}: {e}")
+
+
+async def validate_word(attempt):
+    """Méthode pour marquer un mot comme validé."""
+    row, col = attempt.row, attempt.col
+    direction = attempt.direction
+    length = attempt.length if hasattr(attempt, "length") else next(
+        (w["length"] for w in game_data["placed_words"]
+         if w["row"] == row and w["col"] == col and w["direction"] == direction),
+        None
+    )
+    token = attempt.token
+    # Trouver la room contenant ce token
+    room = next((r for r in ROOMS.values() if token in r["players"]), None)
+    if room is None:
+        print(f"Room not found for token {token}")
+        return
+    for i in range(length):
+        r = row if direction == "H" else row + i
+        c = col + i if direction == "H" else col
+        room["progress"][token][r][c] = True
+
+    # Broadcast aux autres
+    await send_message_to_all_except(
+        room,
+        token,
+        {
+            "type": "player_progress",
+            "from": room["names"][token],
+            "progress": room["progress"][token]
+        }
+    )
+
+
+
+async def send_message_to_all(room, message):
+    """Envoie un message à tous les joueurs dans la salle."""
+    for player in room["players"].values():
+        try:
+            await player.send_json(message)
+        except Exception as e:
+            print(f"Error sending message to player: {e}")
+
+async def send_message_to_all_except(room, sender_token, message):
+    """Envoie un message à tous les joueurs sauf celui qui l'a envoyé."""
+    for token, player in room["players"].items():
+        if token != sender_token:
+            try:
+                await player.send_json(message)
+            except Exception as e:
+                print(f"Error sending message to player {token}: {e}")

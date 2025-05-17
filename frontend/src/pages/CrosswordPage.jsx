@@ -99,30 +99,17 @@ export default function CrosswordPage({ roomId }) {
             );
 
             if (match) {
-                console.log('Mot trouvé:', word);
                 try {
-                    // On confirme côté backend
                     const result = await submitWord({
                         row: match.row,
                         col: match.col,
                         direction: match.direction,
-                        guess: word
+                        guess: word,
+                        token: token
                     });
-
+                    console.log("Word submission result:", result);
                     if (result.valid) {
                         freezeWord(match, word);
-                        if (window.ws?.readyState === WebSocket.OPEN) {
-                            console.log("WebSocket ouverte, envoi de word_validated");
-                            window.ws.send(JSON.stringify({
-                                type: "word_validated",
-                                row: match.row,
-                                col: match.col,
-                                direction: match.direction,
-                                length: match.length
-                            }));
-                        } else {
-                            console.warn("WebSocket not open, couldn't send word_validated");
-                        }
                     }
                 } catch (err) {
                     console.error("Error submitting word:", err);
@@ -141,9 +128,14 @@ export default function CrosswordPage({ roomId }) {
             const ref = inputRefs.current[r][c];
             if (ref?.current) {
                 ref.current.readOnly = true;
-                ref.current.style.color = 'teal'; 
+                // CLear the input value to prevent user from changing it
+                ref.current.value = ''; // Clear the input value
                 ref.current.value = word[i].toUpperCase(); // To prevent the value from being changed before the freeze
+                ref.current.style.color = 'teal'; 
             }
+            const copy = [...inputGrid];
+            copy[r][c] = word[i].toUpperCase();
+            setInputGrid(copy);
         }
     }
 

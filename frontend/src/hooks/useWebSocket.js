@@ -43,11 +43,19 @@ const useWebSocket = (roomId, playerName) => {
                     setToken(msg.token);
                     
                 } else if (msg.type === "player_progress") {
+                    console.log("Progression du joueur reçue:", msg.from, msg.progress);
                     setProgressOtherPlayers(prev => ({
                         ...prev,
                         [msg.from]: msg.progress
                     }));
+                } else if (msg.type === "player_disconnected") {
+                    setProgressOtherPlayers(prev => {
+                        const newProgress = { ...prev };
+                        delete newProgress[msg.from];
+                        return newProgress;
+                    });
                 }
+
             } catch (err) {
                 console.error("Error processing WebSocket message:", err);
             }
