@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
   }
 
   let backendOrigin = process.env.VITE_BACKEND_ORIGIN;
-  backendOrigin = "nin7o.net:8000";
+  backendOrigin = "nin7o.net:8021";
   console.log('VITE_BACKEND_ORIGIN:', backendOrigin);
   
   if (!backendOrigin) {
