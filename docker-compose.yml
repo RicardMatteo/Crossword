@@ -1,0 +1,17 @@
+services:
+  crossword-backend:
+    build: ./backend
+
+  crossword-frontend:
+    build: ./frontend
+    ports:
+      - 5173:5173
+    environment:
+      - VITE_BACKEND_ORIGIN=crossword-backend:8000
+    depends_on:
+      - crossword-backend
+
+networks:
+  default:
+    name: crossword-net
+    driver: bridge

@@ -6,13 +6,7 @@ import fs from 'fs'
 
 export default defineConfig(({ mode }) => {
 
-  
-  if (!fs.existsSync('./.env')) {
-    throw new Error('.env file not found. Please create it with the VITE_BACKEND_ORIGIN variable.');
-  }
-
-  let backendOrigin = process.env.VITE_BACKEND_ORIGIN;
-  backendOrigin = "nin7o.net:8021";
+  let backendOrigin = process.env.VITE_BACKEND_ORIGIN
   console.log('VITE_BACKEND_ORIGIN:', backendOrigin);
   
   if (!backendOrigin) {
@@ -31,7 +25,7 @@ export default defineConfig(({ mode }) => {
       ],
       proxy: {
         '/api': {
-          target: `https://${backendOrigin}`,
+          target: `http://${backendOrigin}`,
           changeOrigin: true, 
           secure: false, // For self-signed certificates (dev only)
           
@@ -45,7 +39,7 @@ export default defineConfig(({ mode }) => {
           }
         },
         '/ws': {
-          target: `wss://${backendOrigin}`,
+          target: `ws://${backendOrigin}`,
           ws: true,
           changeOrigin: true,
           secure: false,
