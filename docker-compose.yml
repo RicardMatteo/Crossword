@@ -11,7 +11,22 @@ services:
     depends_on:
       - crossword-backend
 
+  crossword-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: crossword
+      POSTGRES_PASSWORD: crossword
+      POSTGRES_DB: crossword
+    volumes:
+      - crossword-db-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 5432:5432
+
 networks:
   default:
     name: crossword-net
     driver: bridge
+
+volumes:
+  crossword-db-data:

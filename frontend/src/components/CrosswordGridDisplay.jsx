@@ -46,7 +46,7 @@ function ClueCell({ clues, definitionMap }) {
                     justifyContent: 'center',
                     padding: '2px'
                 }}>
-                    {definitionMap[clues[0]?.toString()] || ''}
+                    {definitionMap[clues[0]?.toString()] || `Not Found, ${clues[0]}`}
                 </div>
             )}
             {isDouble && (
@@ -59,7 +59,7 @@ function ClueCell({ clues, definitionMap }) {
                         justifyContent: 'center',
                         padding: '0.1rem'
                     }}>
-                        {definitionMap[clues[0]?.toString()] || ''}
+                        {definitionMap[clues[0]?.toString()] || `Not Found, ${clues[0]}`}
                     </div>
                     <hr style={{ width: '110%', margin: '1px 0', border: '0.2px #1f1f1f solid' }} />
                     <div style={{
@@ -70,7 +70,7 @@ function ClueCell({ clues, definitionMap }) {
                         justifyContent: 'center',
                         padding: '0.1rem'
                     }}>
-                        {definitionMap[clues[1]?.toString()] || ''}
+                        {definitionMap[clues[1]?.toString()] || `Not Found, ${clues[1]}`}
                     </div>
                 </>
             )}

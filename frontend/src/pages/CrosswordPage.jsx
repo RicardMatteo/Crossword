@@ -21,7 +21,7 @@ export default function CrosswordPage({ roomId }) {
     useEffect(() => {
         const loadGrid = async () => {
             try {
-                const data = await fetchGridData();
+                const data = await fetchGridData(roomId);
                 if (!data || !data.grid_structure) {
                     console.error("Invalid grid data:", data);
                     return;
@@ -59,8 +59,11 @@ export default function CrosswordPage({ roomId }) {
                     const key = `${num}${direction}`;
 
                     defMap[key] = text;
-                    setDefinitionMap(defMap);
+                    // print the definition map
+                    //console.log(`Key: ${key}, Definition: ${text}`);
                 });
+                console.log("Definition map:", defMap);
+                setDefinitionMap(defMap);
             } catch (error) {
                 // Handle error (e.g., show error message to user)
                 console.error("Error loading grid data:", error);
@@ -105,7 +108,8 @@ export default function CrosswordPage({ roomId }) {
                         col: match.col,
                         direction: match.direction,
                         guess: word,
-                        token: token
+                        token: token,
+                        room_id: roomId
                     });
                     console.log("Word submission result:", result);
                     if (result.valid) {

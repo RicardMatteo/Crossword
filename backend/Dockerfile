@@ -17,4 +17,5 @@ COPY game_data.json ./
 
 EXPOSE 8000
 
+ENV PYTHONPATH=/app/src
 CMD ["poetry", "run", "start"]

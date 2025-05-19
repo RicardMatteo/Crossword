@@ -1,11 +1,12 @@
 const backendOrigin = window.location.origin.replace(/:\d+$/, ':8000');
 
-export const fetchGridData = async () => {
+export const fetchGridData = async (room_id) => {
     try {
-        const response = await fetch(`/api/grid`, {
+        const response = await fetch(`/api/grid?room_id=${room_id}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
             mode: "cors",
+            
         });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

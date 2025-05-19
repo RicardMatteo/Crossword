@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "crossword_backend"  # Underscores only, no hyphens
 version = "0.1.0"
-description = "hehehe"
+description = "Crossword site backend"
 authors = ["Modzol and co"]
 license = "WTFPL"
 package-mode = false
@@ -14,6 +14,10 @@ uvicorn = {extras = ["standard"], version = "^0.34.2"}
 gunicorn = ">=23.0.0,<24.0.0"
 wsproto = "^1.2.0"
 websockets = "^15.0.1"
+sqlalchemy = "^2.0.41"
+asyncpg = "^0.30.0"
+databases = "^0.9.0"
+psycopg2-binary = "^2.9.10"
 
 [tool.poetry.scripts]
 start = "src.main:run_app"
