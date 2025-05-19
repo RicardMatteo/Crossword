@@ -1,6 +1,8 @@
 services:
   crossword-backend:
     build: ./backend
+    depends_on:
+      - crossword-db
 
   crossword-frontend:
     build: ./frontend
@@ -13,10 +15,8 @@ services:
 
   crossword-db:
     image: postgres:latest
-    environment:
-      POSTGRES_USER: crossword
-      POSTGRES_PASSWORD: crossword
-      POSTGRES_DB: crossword
+    env_file:
+      - .env
     volumes:
       - crossword-db-data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
