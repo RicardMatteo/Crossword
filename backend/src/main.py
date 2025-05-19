@@ -28,4 +28,4 @@ async def shutdown():
     await database.disconnect()
 
 def run_app():
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8021, reload=True)

@@ -15,7 +15,7 @@ RUN poetry config virtualenvs.create false \
 COPY src ./src
 COPY game_data.json ./
 
-EXPOSE 8000
+EXPOSE 8021
 
 ENV PYTHONPATH=/app/src
 CMD ["poetry", "run", "start"]
