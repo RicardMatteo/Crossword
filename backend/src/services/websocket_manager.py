@@ -34,7 +34,7 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
         if not name:
             await websocket.close(code=1008)
             return
-        token = str(uuid.uuid4())
+        token = f"{room_id}-{uuid.uuid4()}"
         room["names"][token] = name
         room["progress"][token] = [[False if c == '-' else None for c in row] for row in room["grid"]["grid_structure"]]
 
@@ -50,7 +50,16 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
             await websocket.send_json({"type": "player_progress", "from": room["names"][other_token], "progress": progress})
             await room["players"][other_token].send_json({"type": "player_progress", "from": name, "progress": room["progress"][token]})
 
-    await websocket.send_json({"type": "self_progress", "progress": room["progress"][token]})
+    # Pour le joueur on renvoit les lettres bien placées
+    # Build self_progress: show the letter if validated, else None
+    self_progress = [
+        [
+            room["grid"]["grid_structure"][r][c] if room["progress"][token][r][c] == True else None
+            for c in range(len(room["grid"]["grid_structure"][0]))
+        ]
+        for r in range(len(room["grid"]["grid_structure"]))
+    ]
+    await websocket.send_json({"type": "self_progress", "progress": self_progress})
 
     try:
         while True:
@@ -113,7 +122,8 @@ async def validate_word(attempt):
     for i in range(length):
         r = row if direction == "H" else row + i
         c = col + i if direction == "H" else col
-        room["progress"][token][r][c] = True
+        if attempt.guess[i] == room["grid"]["grid_structure"][r][c]:
+            room["progress"][token][r][c] = True
 
     # affiche la progression
     print(f"Progression de {room['names'][token]} :")

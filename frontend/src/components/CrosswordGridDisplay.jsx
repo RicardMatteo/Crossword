@@ -16,6 +16,23 @@ const cellStyle = {
 function ClueCell({ clues, definitionMap }) {
     const isDouble = clues?.length === 2;
 
+    // Helper to get definition, trying V/H swap if not found
+    function getDefinition(clue) {
+        const clueStr = clue?.toString();
+        if (!clueStr) return '';
+        if (definitionMap[clueStr]) return definitionMap[clueStr];
+        // Try swapping last char V<->H
+        if (clueStr.endsWith('V')) {
+            const swapped = clueStr.slice(0, -1) + 'H';
+            return definitionMap[swapped] || `Not Found, ${clue}`;
+        }
+        if (clueStr.endsWith('H')) {
+            const swapped = clueStr.slice(0, -1) + 'V';
+            return definitionMap[swapped] || `Not Found, ${clue}`;
+        }
+        return `Not Found, ${clue}`;
+    }
+
     return (
         <div
             lang="fr"
@@ -46,7 +63,7 @@ function ClueCell({ clues, definitionMap }) {
                     justifyContent: 'center',
                     padding: '2px'
                 }}>
-                    {definitionMap[clues[0]?.toString()] || `Not Found, ${clues[0]}`}
+                    {getDefinition(clues[0])}
                 </div>
             )}
             {isDouble && (
@@ -59,7 +76,7 @@ function ClueCell({ clues, definitionMap }) {
                         justifyContent: 'center',
                         padding: '0.1rem'
                     }}>
-                        {definitionMap[clues[0]?.toString()] || `Not Found, ${clues[0]}`}
+                        {getDefinition(clues[0])}
                     </div>
                     <hr style={{ width: '110%', margin: '1px 0', border: '0.2px #1f1f1f solid' }} />
                     <div style={{
@@ -70,7 +87,7 @@ function ClueCell({ clues, definitionMap }) {
                         justifyContent: 'center',
                         padding: '0.1rem'
                     }}>
-                        {definitionMap[clues[1]?.toString()] || `Not Found, ${clues[1]}`}
+                        {getDefinition(clues[1])}
                     </div>
                 </>
             )}

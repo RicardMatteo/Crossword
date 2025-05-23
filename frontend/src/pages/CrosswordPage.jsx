@@ -16,7 +16,7 @@ export default function CrosswordPage({ roomId }) {
     const [placedWords, setPlacedWords] = useState([]);
     const [playerName, setPlayerName] = useState(localStorage.getItem('name') || '');
 
-    const { token, progressOtherPlayers } = useWebSocket(roomId, playerName);
+    const { token, progressOtherPlayers, progress } = useWebSocket(roomId, playerName);
 
     useEffect(() => {
         const loadGrid = async () => {
@@ -30,6 +30,15 @@ export default function CrosswordPage({ roomId }) {
                 const initialGrid = data.grid_structure.map(row =>
                     row.split('').map(c => (c === '-' ? '' : null))
                 );
+                if (progress) {
+                    initialGrid.forEach((rowArr, r) => {
+                        rowArr.forEach((cell, c) => {
+                            if (cell === null && progress[r]?.[c]) {
+                                initialGrid[r][c] = progress[r][c];
+                            }
+                        });
+                    });
+                }
                 console.log("Initial grid:", initialGrid);
                 setInputGrid(initialGrid);
                 setPlacedWords(data.placed_words);

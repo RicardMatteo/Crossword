@@ -4,6 +4,7 @@ const useWebSocket = (roomId, playerName) => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const wsRef = useRef(null);
     const [progressOtherPlayers, setProgressOtherPlayers] = useState({});
+    const [progress, setProgress] = useState({});
 
     useEffect(() => {
         if (!playerName || !roomId) {
@@ -41,6 +42,10 @@ const useWebSocket = (roomId, playerName) => {
                     localStorage.setItem(`token-${msg.room_id}`, msg.token);
                     console.log("Token reçu et stocké:", msg.token, msg.room_id);
                     setToken(msg.token);
+                } else if (msg.type === "self_progress") {
+                    console.log("Ancienne progression retrouvé :", msg.progress);
+                    setProgress(msg.progress);
+    
                     
                 } else if (msg.type === "player_progress") {
                     console.log("Progression du joueur reçue:", msg.from, msg.progress);
@@ -82,7 +87,7 @@ const useWebSocket = (roomId, playerName) => {
         };
     }, [roomId, playerName]);
 
-    return { token, progressOtherPlayers };
+    return { token, progressOtherPlayers, progress };
 };
 
 export default useWebSocket;
