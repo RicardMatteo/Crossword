@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 const useWebSocket = (roomId, playerName) => {
-    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [token, setToken] = useState(localStorage.getItem(`token-${roomId}`) || null);
     const wsRef = useRef(null);
     const [progressOtherPlayers, setProgressOtherPlayers] = useState({});
     const [progress, setProgress] = useState({});
@@ -26,7 +26,7 @@ const useWebSocket = (roomId, playerName) => {
 
         socket.onopen = () => {
             console.log("WebSocket ouverte");
-            socket.send(JSON.stringify({ type: 'join', name: playerName }));
+            socket.send(JSON.stringify({ type: 'join', name: playerName, token: token}));
         };
 
         socket.onerror = (error) => {
@@ -45,6 +45,7 @@ const useWebSocket = (roomId, playerName) => {
                 } else if (msg.type === "self_progress") {
                     console.log("Ancienne progression retrouvé :", msg.progress);
                     setProgress(msg.progress);
+                    console.log("Progression du joueur mise à jour:", progress);
     
                     
                 } else if (msg.type === "player_progress") {

@@ -29,7 +29,7 @@ async def get_random_grid():
     query = GridTemplate.select().order_by(func.random()).limit(1)
     row = await database.fetch_one(query)
     if not row:
-        return None
+        return
 
     placed_words = row["placed_words"]
     for word in placed_words:

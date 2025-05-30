@@ -34,9 +34,21 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
         if not name:
             await websocket.close(code=1008)
             return
+        print(f"New player in room {room_id} with token {token}")
         token = f"{room_id}-{uuid.uuid4()}"
         room["names"][token] = name
         room["progress"][token] = [[False if c == '-' else None for c in row] for row in room["grid"]["grid_structure"]]
+        room["is_connected"][token] = True
+
+    else:
+        print(f"Reconnecting player {name} with token {token} in room {room_id}")
+        if not name:
+            name = room["names"].get(token, f"Player-{token[-4:]}")
+        room["is_connected"][token] = True
+        # print progress for this player
+        print(f"Progression de {name} :")
+        for row in room["progress"][token]:
+            print(" ".join(['#' if c else '-' for c in row]))
 
     room["players"][token] = websocket
     room["is_connected"][token] = True
@@ -54,7 +66,7 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
     # Build self_progress: show the letter if validated, else None
     self_progress = [
         [
-            room["grid"]["grid_structure"][r][c] if room["progress"][token][r][c] == True else None
+            room["grid"]["solution_grid"][r][c] if room["progress"][token][r][c] == True else None
             for c in range(len(room["grid"]["grid_structure"][0]))
         ]
         for r in range(len(room["grid"]["grid_structure"]))
@@ -89,7 +101,7 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
 
 async def send_message_to_all_except(room, sender_token, message):
     for token, player in room["players"].items():
-        if token != sender_token:
+        if token != sender_token and room["is_connected"].get(token, False):
             try:
                 await player.send_json(message)
             except Exception as e:
@@ -107,29 +119,27 @@ async def validate_word(attempt):
     if room is None:
         print(f"Room not found for room_id {attempt.room_id}")
         return
-    game_data = room["grid"]
-    length = attempt.length if hasattr(attempt, "length") else next(
-        (w["length"] for w in game_data["placed_words"]
-         if w["row"] == row and w["col"] == col and w["direction"] == direction),
-        None
-    )
+    
+    length = attempt.length
     token = attempt.token
-    # Trouver la room contenant ce token
     room = next((r for r in ROOMS.values() if token in r["players"]), None)
     if room is None:
         print(f"Room not found for token {token}")
         return
+    
     for i in range(length):
         r = row if direction == "H" else row + i
         c = col + i if direction == "H" else col
-        if attempt.guess[i] == room["grid"]["grid_structure"][r][c]:
+        
+        if attempt.guess[i] == room["grid"]["solution_grid"][r][c]:
             room["progress"][token][r][c] = True
-
-    # affiche la progression
+        else:       
+            print(f"Invalid word attempt: {attempt.guess[i]} at ({r}, {c})")        
+    
     print(f"Progression de {room['names'][token]} :")
     for row in room["progress"][token]:
         print(" ".join(['#' if c else '-' for c in row]))
-    # Broadcast aux autres
+
     await send_message_to_all_except(
         room,
         token,

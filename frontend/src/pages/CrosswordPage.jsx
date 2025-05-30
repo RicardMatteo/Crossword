@@ -30,15 +30,7 @@ export default function CrosswordPage({ roomId }) {
                 const initialGrid = data.grid_structure.map(row =>
                     row.split('').map(c => (c === '-' ? '' : null))
                 );
-                if (progress) {
-                    initialGrid.forEach((rowArr, r) => {
-                        rowArr.forEach((cell, c) => {
-                            if (cell === null && progress[r]?.[c]) {
-                                initialGrid[r][c] = progress[r][c];
-                            }
-                        });
-                    });
-                }
+             
                 console.log("Initial grid:", initialGrid);
                 setInputGrid(initialGrid);
                 setPlacedWords(data.placed_words);
@@ -82,6 +74,28 @@ export default function CrosswordPage({ roomId }) {
         loadGrid();
     }, []);
 
+    useEffect(() => {
+    if (progress && gridStructure.length > 0) {
+        setInputGrid(prevGrid => {
+            const newGrid = [...prevGrid];
+            Object.keys(progress).forEach(r => {
+                Object.keys(progress[r]).forEach(c => {
+                    if (prevGrid[r] && prevGrid[r][c] !== null && progress[r][c] !== null) {
+                        newGrid[r][c] = progress[r][c].toUpperCase();
+                        const ref = inputRefs.current[r][c];
+                        if (ref?.current) {
+                            ref.current.readOnly = true;
+                            ref.current.value = newGrid[r][c]; // Set the value to prevent user from changing it
+                            ref.current.style.color = 'teal'; // Change color to indicate it's frozen
+                        }
+                    }
+                });
+            });
+            return newGrid;
+        });
+    }
+}, [progress, gridStructure]);
+
     async function hashWord(word) {
         const encoder = new TextEncoder();
         const data = encoder.encode(word.toUpperCase());
@@ -118,7 +132,8 @@ export default function CrosswordPage({ roomId }) {
                         direction: match.direction,
                         guess: word,
                         token: token,
-                        room_id: roomId
+                        room_id: roomId,
+                        length: match.length
                     });
                     console.log("Word submission result:", result);
                     if (result.valid) {

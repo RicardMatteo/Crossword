@@ -13,6 +13,7 @@ class WordAttempt(BaseModel):
     guess: str
     token: str
     room_id: str
+    length: int
 
 @router.get("/api/grid")
 async def get_grid(room_id: str):
@@ -25,7 +26,6 @@ async def get_grid(room_id: str):
         grid_def_order = json.load(f)
 
     game_data = room["grid"]
-    print(f"Game data: {game_data}")
     return JSONResponse(content={
         "grid_structure": game_data["grid_structure"],
         "definitions_horizontal": game_data["definitions_horizontal"],
