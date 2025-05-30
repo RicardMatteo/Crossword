@@ -19,3 +19,12 @@ export function isLongEnough(inputGrid, row, col, dir) {
     const { start, end } = getWordBounds(inputGrid, row, col, dir);
     return end - start > 0;
 }
+
+export function generateArrowMap(arrowMapInit,placedWords){
+    const arrowMap = arrowMapInit;
+    placedWords.map((word) => {
+        arrowMap[word.row][word.col]+= word.direction;
+    }
+    );
+    return arrowMap;
+}

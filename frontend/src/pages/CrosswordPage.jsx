@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import CrosswordGridDisplay from '../components/CrosswordGridDisplay';
 import PlayerProgress from '../components/PlayerProgress';
-import { getWordBounds, isLongEnough } from '../utils/gridUtils';
+import { getWordBounds, isLongEnough,generateArrowMap } from '../utils/gridUtils';
 import { fetchGridData, submitWord } from '../utils/apiUtils';
 import useWebSocket from '../hooks/useWebSocket';
 
@@ -15,6 +15,7 @@ export default function CrosswordPage({ roomId }) {
     const [definitionMap, setDefinitionMap] = useState({});
     const [placedWords, setPlacedWords] = useState([]);
     const [playerName, setPlayerName] = useState(localStorage.getItem('name') || '');
+    const [arrowMap,setArrowMap] = useState([[]]);
 
     const { token, progressOtherPlayers, progress } = useWebSocket(roomId, playerName);
 
@@ -22,6 +23,7 @@ export default function CrosswordPage({ roomId }) {
         const loadGrid = async () => {
             try {
                 const data = await fetchGridData(roomId);
+
                 if (!data || !data.grid_structure) {
                     console.error("Invalid grid data:", data);
                     return;
@@ -30,6 +32,10 @@ export default function CrosswordPage({ roomId }) {
                 const initialGrid = data.grid_structure.map(row =>
                     row.split('').map(c => (c === '-' ? '' : null))
                 );
+                const arrowMapInit = data.grid_structure.map(row =>
+                    row.split('').map( _ => '')
+                );
+                console.log("ArrowMapinit",arrowMapInit);
                 if (progress) {
                     initialGrid.forEach((rowArr, r) => {
                         rowArr.forEach((cell, c) => {
@@ -39,9 +45,11 @@ export default function CrosswordPage({ roomId }) {
                         });
                     });
                 }
-                console.log("Initial grid:", initialGrid);
                 setInputGrid(initialGrid);
                 setPlacedWords(data.placed_words);
+                setArrowMap(generateArrowMap(arrowMapInit,data.placed_words));
+                console.log("arrowMap",arrowMap);
+
                 inputRefs.current = initialGrid.map(row =>
                     row.map(() => React.createRef())
                 );
@@ -298,6 +306,7 @@ export default function CrosswordPage({ roomId }) {
                     onFocus={onFocus}
                     isInFocusedWord={isInFocusedWord}
                     definitionMap={definitionMap}
+                    arrowMap = {arrowMap}
                 />
             </div>
             <PlayerProgress progressOtherPlayers={progressOtherPlayers} gridStructure={gridStructure} />
