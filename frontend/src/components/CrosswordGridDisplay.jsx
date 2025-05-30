@@ -1,4 +1,5 @@
 import React from 'react';
+import "./GridDisplay.css"
 
 const cellStyle = {
     width: '5rem',
@@ -95,30 +96,40 @@ function ClueCell({ clues, definitionMap }) {
     );
 }
 
-function InputCell({ cell, rowIndex, colIndex, inputRefs, handleKeyDown, onFocus, isInWord, isFocused }) {
+function InputCell({ cell, rowIndex, colIndex, inputRefs, handleKeyDown, onFocus, isInWord, isFocused , arrow}) {
     return (
-        <input
-            key={colIndex}
-            type="text"
-            maxLength={1}
-            value={cell || ''}
-            ref={inputRefs.current[rowIndex][colIndex]}
-            onChange={(e) => {
-                if (navigator.userAgent.toLowerCase().includes('mobile')) {
-                    const syntheticEvent = { ...e, key: e.target.value.slice(-1) };
-                    handleKeyDown(syntheticEvent, rowIndex, colIndex);
-                }
-            }}
-            onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
-            onClick={() => onFocus(rowIndex, colIndex)}
-            style={{
-                ...cellStyle,
-                padding: 0,
-                backgroundColor: isInWord ? (isFocused ? '#ffa94d' : '#ffe8cc') : 'white',
-                caretColor: 'transparent',
-                outline: 'none'
-            }}
-        />
+        <div className="cell-container">
+
+
+            <input
+                key={colIndex}
+                type="text"
+                maxLength={1}
+                value={cell || ''}
+                ref={inputRefs.current[rowIndex][colIndex]}
+                onChange={(e) => {
+                    if (navigator.userAgent.toLowerCase().includes('mobile')) {
+                        const syntheticEvent = { ...e, key: e.target.value.slice(-1) };
+                        handleKeyDown(syntheticEvent, rowIndex, colIndex);
+                    }
+                }}
+                onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
+                onClick={() => onFocus(rowIndex, colIndex)}
+                style={{
+                    ...cellStyle,
+                    padding: 0,
+                    backgroundColor: isInWord ? (isFocused ? '#ffa94d' : '#ffe8cc') : 'white',
+                    caretColor: 'transparent',
+                    outline: 'none',
+                    gridArea: '1/1',
+                }}
+                
+                
+                />
+
+                {arrow.includes('V') && <div className="down-triangle"/> }
+                {arrow.includes('H') && <div className="right-triangle"/> }
+        </div>
     );
 }
 
@@ -132,7 +143,8 @@ export default function CrosswordGridDisplay({
     handleKeyDown,
     onFocus,
     isInFocusedWord,
-    definitionMap
+    definitionMap,
+    arrowMap
 }) {
     return (
         <div lang='fr' style={{ display: 'inline-block', marginBottom: '2rem' }}>
@@ -154,6 +166,7 @@ export default function CrosswordGridDisplay({
                                     onFocus={onFocus}
                                     isInWord={isInWord}
                                     isFocused={isFocused}
+                                    arrow = {arrowMap[rowIndex][colIndex]}
                                 />
                             );
                         } else {
