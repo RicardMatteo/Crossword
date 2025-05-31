@@ -69,15 +69,9 @@ export default function CrosswordPage({ roomId }) {
 
 
                 const defMap = {};
-                [...data.definitions_horizontal, ...data.definitions_vertical].forEach((d, index) => {
-                    const direction = index < data.definitions_horizontal.length ? 'H' : 'V';
-                    const num = d.split('.')[0].trim();
-                    const text = d.split('.').slice(1).join('.').trim();
-                    const key = `${num}${direction}`;
-
-                    defMap[key] = text;
-                    // print the definition map
-                    //console.log(`Key: ${key}, Definition: ${text}`);
+                data.placed_words.forEach(word => {
+                    const key = `${word.number}${word.direction}`;
+                    defMap[key] = word.clue;
                 });
                 console.log("Definition map:", defMap);
                 setDefinitionMap(defMap);

@@ -8,8 +8,6 @@ GridTemplate = Table(
     Column("grid_structure", JSON),
     Column("solution_grid", JSON),
     Column("placed_words", JSON),
-    Column("definitions_horizontal", JSON),
-    Column("definitions_vertical", JSON),
     Column("grid_def_order", JSON),
     Column("difficulty", String),
 )

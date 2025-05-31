@@ -28,8 +28,6 @@ async def get_grid(room_id: str):
     game_data = room["grid"]
     return JSONResponse(content={
         "grid_structure": game_data["grid_structure"],
-        "definitions_horizontal": game_data["definitions_horizontal"],
-        "definitions_vertical": game_data["definitions_vertical"],
         "grid_def_order": grid_def_order["grid_def_order"],
         "placed_words": [
             {k: v for k, v in word.items() if k != "word"} for word in game_data["placed_words"]

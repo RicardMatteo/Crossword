@@ -18,8 +18,6 @@ async def get_first_grid():
     return {
         "grid_structure": row["grid_structure"],
         "solution_grid": row["solution_grid"],
-        "definitions_horizontal": row["definitions_horizontal"],
-        "definitions_vertical": row["definitions_vertical"],
         "grid_def_order": row["grid_def_order"],
         "placed_words": placed_words,
         "difficulty": row["difficulty"]
@@ -38,8 +36,6 @@ async def get_random_grid():
     return {
         "grid_structure": row["grid_structure"],
         "solution_grid": row["solution_grid"],
-        "definitions_horizontal": row["definitions_horizontal"],
-        "definitions_vertical": row["definitions_vertical"],
         "grid_def_order": row["grid_def_order"],
         "placed_words": placed_words
     }
