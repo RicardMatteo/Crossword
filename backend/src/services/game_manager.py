@@ -6,6 +6,7 @@ import uuid
 from core.game_modes.normal_game import NormalGame
 from core.game_modes.coop_game import CoopGame
 from core.game_modes.base_game import Game
+from utils.game_status import GameStatus
 
 GAMES = {}
 
@@ -64,33 +65,35 @@ async def join_room(room_id, websocket, name, token=None) -> dict:
     """Join an existing game room or create a new one if it doesn't exist."""
     game = GAMES.get(room_id)
     if not game:
-        await create_room(room_id, name)
+        created = await create_room(room_id, None)
+        if "error" in created:
+            return created
         game = GAMES[room_id]
 
     if not token or token not in game.players:
         token = f"{room_id}-{uuid.uuid4()}"
         while token in game.players:
             token = f"{room_id}-{uuid.uuid4()}"
+        await websocket.send_json({"type": "token", "token": token, "room_id": room_id})
         await game.join(websocket, name, token)
     else:
         print(f"Reconnecting player {name} with token {token} in room {room_id}")
-        if not name:
-            name = game.players[token].name
+        await websocket.send_json({"type": "token", "token": token, "room_id": room_id})
         game.players[token].reconnect(websocket)
-    
-    await websocket.send_json({"type": "token", "token": token, "room_id": room_id})
-    await websocket.send_json({
-        "type": "game_owner",
-        "new_owner": game.owner
-    })
-    players = [ players.name for players in game.players.values() if players.is_connected ]
-    await websocket.send_json({
-        "type": "players",
-        "players": players
-    })
-    
+        if name:
+            game.players[token].name = name
+
+    # The first player (or the first one back if the owner left) owns the room
+    owner = game.players.get(game.owner)
+    if owner is None or not owner.is_connected:
+        game.owner = token
+
+    await game.send_message_to_all(game.players_message())
+
+    if game.status == GameStatus.IN_PROGRESS:
+        await websocket.send_json({"type": "game_started"})
+
     await game.send_initial_progress(websocket, token)
     await game.send_other_players_progress(websocket, token)
 
-    
     return {"message": "Joined room successfully", "token": token, "room": game}

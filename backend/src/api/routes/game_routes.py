@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from services.game_manager import GAMES, get_room, validate_word
+from utils.game_status import GameStatus
 import json
 
 router = APIRouter()
@@ -64,13 +65,15 @@ async def get_public_games():
     public_games = [
         {
             "id": room_id,
-            "owner": game.owner,
+            "owner": game.owner_name,
             "game_mode": game.__class__.__name__,
             "playerCount": len(game.players),
             "isRanked": game.is_ranked,
-            "status": game.status.value
+            "status": game.status.name
         }
         for room_id, game in GAMES.items()
         if game.is_public
+        and game.status == GameStatus.WAITING_FOR_PLAYERS
+        and any(player.is_connected for player in game.players.values())
     ]
     return JSONResponse(content=public_games, media_type="application/json; charset=utf-8")

@@ -15,6 +15,7 @@ const useWebSocket = (roomId, playerName) => {
   const [progress, setProgress] = useState({})
   const [isGameOwner, setIsGameOwner] = useState(false)
   const [players, setPlayers] = useState([])
+  const [gameStarted, setGameStarted] = useState(false)
 
   useEffect(() => {
     if (!playerName || !roomId) {
@@ -37,8 +38,9 @@ const useWebSocket = (roomId, playerName) => {
       socket.onopen = () => {
         console.log("WebSocket ouverte")
         reconnectRef.current.attempts = 0
-        // send join with current token (may be null)
-        socket.send(JSON.stringify({ type: "join", name: playerName, token: token }))
+        // read the token at send time: the closure value is stale after the first join
+        const savedToken = localStorage.getItem(`token-${roomId}`)
+        socket.send(JSON.stringify({ type: "join", name: playerName, token: savedToken }))
         // ask server to send current players list to avoid missed broadcasts
         socket.send(JSON.stringify({ type: "request_players" }))
       }
@@ -76,27 +78,21 @@ const useWebSocket = (roomId, playerName) => {
             window.dispatchEvent(new CustomEvent("gameFinished", { detail: msg.stats }))
           } else if (msg.type === "game_started") {
             console.log("Game started")
-            window.dispatchEvent(new CustomEvent("gameStarted"))
-          } else if (msg.type === "game_owner") {
-            if (msg.owner === playerName) {
-              console.log("You are now the game owner")
-              setIsGameOwner(true)
-            } else {
-              console.log("Game owner updated:", msg.owner)
-              setIsGameOwner(false)
-            }
+            setGameStarted(true)
           } else if (msg.type === "players") {
             console.log("Players list received:", msg.players)
             setPlayers(msg.players)
-            // Ensure progressOtherPlayers has an entry for each player (even if empty)
+            setIsGameOwner(msg.players.some((p) => p.isOwner && p.name === playerName))
+            // Ensure progressOtherPlayers has an entry for each other player (even if empty)
+            const names = msg.players.map((p) => p.name).filter((n) => n !== playerName)
             setProgressOtherPlayers((prev) => {
               const newProg = { ...prev }
-              msg.players.forEach((p) => {
-                if (!(p in newProg)) newProg[p] = {}
+              names.forEach((n) => {
+                if (!(n in newProg)) newProg[n] = {}
               })
               // remove entries for players no longer present
               Object.keys(newProg).forEach((k) => {
-                if (!msg.players.includes(k)) delete newProg[k]
+                if (!names.includes(k)) delete newProg[k]
               })
               return newProg
             })
@@ -138,15 +134,24 @@ const useWebSocket = (roomId, playerName) => {
       stopped = true
       clearInterval(playersInterval)
       if (reconnectRef.current.timeoutId) clearTimeout(reconnectRef.current.timeoutId)
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      // Close even while still CONNECTING: otherwise the socket survives the cleanup
+      // (React StrictMode mounts effects twice) and joins the room as a ghost player
+      if (wsRef.current) {
         console.log("Cleaning up WebSocket connection")
+        wsRef.current.onclose = null
         wsRef.current.close(1000, "Cleaning up")
       }
       wsRef.current = null
     }
   }, [roomId, playerName])
 
-  return { token, progressOtherPlayers, progress, isGameOwner, players }
+  const startGame = () => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: "start_game" }))
+    }
+  }
+
+  return { token, progressOtherPlayers, progress, isGameOwner, players, gameStarted, startGame }
 }
 
 export default useWebSocket

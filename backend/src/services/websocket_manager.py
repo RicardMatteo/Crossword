@@ -1,6 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect
 from services.game_manager import join_room
-from utils.websocket_utils import send_message_to_all_except
+from utils.game_status import GameStatus
 
 async def handle_websocket(websocket: WebSocket, room_id: str):
     await websocket.accept()
@@ -9,26 +9,34 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
     except WebSocketDisconnect:
         return
 
-    token = init.get("token")
     name = init.get("name")
 
-    join = await join_room(room_id, websocket, name, token)
-    if "error" in join or "room" not in join or join["message"] != "Joined room successfully":
+    join = await join_room(room_id, websocket, name, init.get("token"))
+    if "error" in join:
         await websocket.close(code=4000, reason=join["error"])
         return
-    
+
     game = join["room"]
+    # Use the token assigned by join_room: a new player arrives without one
+    token = join["token"]
 
     try:
         while True:
             msg = await websocket.receive_json()
-            # Todo : Handle futur incoming messages
+            msg_type = msg.get("type")
+
+            if msg_type == "request_players":
+                await websocket.send_json(game.players_message())
+            elif msg_type == "start_game":
+                if token != game.owner:
+                    continue
+                if game.status == GameStatus.WAITING_FOR_PLAYERS:
+                    game.status = GameStatus.IN_PROGRESS
+                    await game.send_message_to_all({"type": "game_started"})
 
     except WebSocketDisconnect:
-        if token in game.players:
-            game.players[token].disconnect()
-            
-            await send_message_to_all_except(game, token, {
-            "type": "player_disconnected",
-            "from": name
-            })
+        player = game.players.get(token)
+        # Ignore stale sockets: the player may already have reconnected elsewhere
+        if player and player.websocket is websocket:
+            player.disconnect()
+            await game.on_player_left(token)

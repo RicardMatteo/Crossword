@@ -47,7 +47,15 @@ export default function GamePage() {
   const [showNameInput, setShowNameInput] = useState(!getCurrentPlayerName())
 
   // WebSocket connection
-  const { token, progressOtherPlayers, progress, isGameOwner, players } = useWebSocket(roomId, playerName)
+  const { token, progressOtherPlayers, progress, isGameOwner, players, gameStarted, startGame } = useWebSocket(
+    roomId,
+    showNameInput ? null : playerName, // only connect once the name is confirmed
+  )
+
+  // The server decides when the game starts (owner click, or joining a running game)
+  useEffect(() => {
+    if (gameStarted && gamePhase === "lobby") setGamePhase("playing")
+  }, [gameStarted, gamePhase])
 
   // Load grid data on component mount
   useEffect(() => {
@@ -150,17 +158,6 @@ export default function GamePage() {
       })
     }
   }, [progress, gridStructure])
-
-  // Add useEffect to handle WebSocket game events:
-  useEffect(() => {
-    // Listen for game end message from WebSocket
-    // This would be integrated with your existing WebSocket hook
-    const handleGameEnd = (stats) => {
-      setGameEndStats(stats)
-      setGamePhase("finished")
-    }
-
-  }, [gamePhase, playerName])
 
   // Hash word for validation
   async function hashWord(word) {
@@ -373,7 +370,7 @@ export default function GamePage() {
 
   // Add handler functions:
   const handleStartGame = () => {
-    setGamePhase("playing")
+    startGame()
   }
 
   const handleLeaveGame = () => {
@@ -386,6 +383,30 @@ export default function GamePage() {
   }
 
   // Update the return statement to conditionally render based on gamePhase:
+  if (gamePhase === "lobby" && showNameInput) {
+    return (
+      <div className="game-page">
+        <div className="name-input-container">
+          <input
+            className="form-input"
+            placeholder={t("enterName")}
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && playerName.trim() && handlePlayerNameChange(playerName.trim())}
+            autoFocus
+          />
+          <button
+            className="btn btn-primary"
+            onClick={() => playerName.trim() && handlePlayerNameChange(playerName.trim())}
+            disabled={!playerName.trim()}
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (gamePhase === "lobby") {
     return (
       <GameLobby roomId={roomId} onStartGame={handleStartGame} onLeaveGame={handleLeaveGame} isOwner={isGameOwner} players={players} />

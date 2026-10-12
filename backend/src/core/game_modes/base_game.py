@@ -44,11 +44,34 @@ class Game(ABC):
 
     
     async def join(self, websocket, name, token):
-        # Send a JSON-serializable list of connected player names (not a set)
-        await self.send_message_to_all({
+        pass
+
+    @property
+    def owner_name(self):
+        owner = self.players.get(self.owner)
+        return owner.name if owner else None
+
+    def players_message(self):
+        return {
             "type": "players",
-            "players": [player.name for player in self.players.values() if player.is_connected]
+            "players": [
+                {"name": player.name, "isOwner": token == self.owner}
+                for token, player in self.players.items()
+                if player.is_connected
+            ],
+        }
+
+    async def on_player_left(self, token):
+        """Hand ownership to another connected player and notify the room."""
+        if token == self.owner:
+            connected = [t for t, p in self.players.items() if p.is_connected]
+            if connected:
+                self.owner = connected[0]
+        await self.send_message_to_all({
+            "type": "player_disconnected",
+            "from": self.players[token].name
         })
+        await self.send_message_to_all(self.players_message())
 
     @abstractmethod
     async def validate_word(self, attempt):
@@ -71,11 +94,8 @@ class Game(ABC):
             self.owner = new_owner
         else:
             raise ValueError("New owner must be a player in the game.")
-        await self.send_message_to_all({
-            "type": "game_owner",
-            "new_owner": new_owner
-        })
-        
+        await self.send_message_to_all(self.players_message())
+
     async def send_message_to_all(self, message):
         for player in self.players.values():
             if player.is_connected and player.websocket:

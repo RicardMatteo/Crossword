@@ -8,34 +8,25 @@ const AuthContext = createContext()
  * Authentication provider that manages user state
  * Handles both authenticated users and guest users with temporary names
  */
+// Read the saved session synchronously so the very first render already knows
+// the player's name (pages like GamePage read it in their initial state)
+const loadSavedUser = () => {
+  const savedUser = localStorage.getItem("crossword-user")
+  if (!savedUser) return null
+  try {
+    return JSON.parse(savedUser)
+  } catch (error) {
+    console.error("Error parsing saved user data:", error)
+    localStorage.removeItem("crossword-user")
+    return null
+  }
+}
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [guestName, setGuestName] = useState("")
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // Check for existing user session
-    const savedUser = localStorage.getItem("crossword-user")
-    const savedGuestName = localStorage.getItem("crossword-guest-name")
-
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
-        setIsAuthenticated(true)
-      } catch (error) {
-        console.error("Error parsing saved user data:", error)
-        localStorage.removeItem("crossword-user")
-      }
-    }
-
-    if (savedGuestName) {
-      setGuestName(savedGuestName)
-    }
-
-    setLoading(false)
-  }, [])
+  const [user, setUser] = useState(loadSavedUser)
+  const [isAuthenticated, setIsAuthenticated] = useState(() => user !== null)
+  const [guestName, setGuestName] = useState(() => localStorage.getItem("crossword-guest-name") || "")
+  const [loading] = useState(false)
 
   const login = async (userData) => {
     try {

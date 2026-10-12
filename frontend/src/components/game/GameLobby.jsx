@@ -8,7 +8,7 @@ import "./GameLobby.css"
 /**
  * Game lobby component where players wait and owner configures game settings
  */
-const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = true, players }) => {
+const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players }) => {
   const { t } = useLanguage()
   const { getCurrentPlayerName } = useAuth()
   const [gameSettings, setGameSettings] = useState({
@@ -44,8 +44,7 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = true, players }
     }))
   }
 
-  const canStartGame = true //players.length >= 2 && players.every((p) => p.ready)
-  isOwner = true // Assume owner for now
+  const canStartGame = players.length >= 1
   return (
     <div className="game-lobby">
       <div className="lobby-header">
@@ -64,17 +63,10 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = true, players }
           </h3>
           <div className="players-list">
             {players.map((player) => (
-              <div key={player.id} className={`player-card ${player.ready ? "ready" : ""}`}>
+              <div key={player.name} className="player-card">
                 <div className="player-info">
                   <span className="player-name">{player.name}</span>
                   {player.isOwner && <span className="owner-badge">👑</span>}
-                </div>
-                <div className="player-status">
-                  {player.ready ? (
-                    <span className="ready-indicator">✅ Ready</span>
-                  ) : (
-                    <span className="not-ready-indicator">⏳ Not Ready</span>
-                  )}
                 </div>
               </div>
             ))}
