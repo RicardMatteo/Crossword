@@ -312,4 +312,17 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
+# Custom
 
+db/
+mfj/
+old/
+setup-ssl.sh
+todo.md
+utils/
+generate/
+
+# Local dumps / backups
+*.sql.dump
+db_dump_all*.sql
+*.zip

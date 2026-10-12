@@ -15,6 +15,7 @@ class CoopGame(Game):
         else:
             self.players[token].name = name
             self.players[token].reconnect(websocket)
+        await super().join(websocket, name, token)
         return token
 
     async def validate_word(self, attempt):

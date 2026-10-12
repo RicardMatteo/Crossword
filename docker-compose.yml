@@ -3,6 +3,10 @@ services:
     build: ./backend
     depends_on:
       - crossword-db
+    # Mount source for development so backend code changes are picked up
+    volumes:
+      - ./backend/src:/app/src:cached
+      - ./backend/pyproject.toml:/app/pyproject.toml:ro
 
   crossword-frontend:
     build: ./frontend
@@ -12,14 +16,24 @@ services:
       - VITE_BACKEND_ORIGIN=crossword-backend:8000
     depends_on:
       - crossword-backend
+    # Mount frontend source so Vite HMR works without rebuilding the image
+    volumes:
+      - ./frontend/src:/app/src:cached
+      - ./frontend/index.html:/app/index.html:ro
+      - ./frontend/vite.config.js:/app/vite.config.js:ro
 
   crossword-db:
-    image: postgres:latest
+    # Pin to Postgres 17 to match the existing data directory and allow a safe
+    # restore/migration. Use `postgres:latest` only after running a proper
+    # major-version upgrade (pg_upgrade) or restoring from a dump.
+    image: postgres:17
     env_file:
       - .env
     volumes:
       - crossword-db-data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # Disabled during restore to avoid duplicate initialization while we
+      # import the preserved dump. Re-enable after restore if desired.
+      # - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 5432:5432
 

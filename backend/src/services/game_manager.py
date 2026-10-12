@@ -9,7 +9,6 @@ from core.game_modes.base_game import Game
 
 GAMES = {}
 
-
 async def get_room(room_id) -> "Game | None":
     """Retrieve the game instance for a given room ID."""
     return GAMES.get(room_id, None)
@@ -80,8 +79,18 @@ async def join_room(room_id, websocket, name, token=None) -> dict:
         game.players[token].reconnect(websocket)
     
     await websocket.send_json({"type": "token", "token": token, "room_id": room_id})
+    await websocket.send_json({
+        "type": "game_owner",
+        "new_owner": game.owner
+    })
+    players = [ players.name for players in game.players.values() if players.is_connected ]
+    await websocket.send_json({
+        "type": "players",
+        "players": players
+    })
     
     await game.send_initial_progress(websocket, token)
     await game.send_other_players_progress(websocket, token)
+
     
     return {"message": "Joined room successfully", "token": token, "room": game}

@@ -1,4 +1,5 @@
 from models.game import GridTemplate
+import html
 from core.database import database
 import hashlib
 from sqlalchemy import Table, Column, Integer, String, JSON, func
@@ -12,7 +13,14 @@ async def get_first_grid():
 
     placed_words = row["placed_words"]
     for word in placed_words:
-        word["hash"] = hashlib.sha256(word["word"].encode()).hexdigest()
+        # Ensure clues are unescaped (in case DB contains HTML entities)
+        if "clue" in word and isinstance(word["clue"], str):
+            word["clue"] = html.unescape(word["clue"]) 
+        # ensure consistent UTF-8 encoding when hashing
+        if "word" in word and isinstance(word["word"], str):
+            word["hash"] = hashlib.sha256(word["word"].encode("utf-8")).hexdigest()
+        else:
+            word["hash"] = None
 
     
     return {
@@ -27,11 +35,16 @@ async def get_random_grid():
     query = GridTemplate.select().order_by(func.random()).limit(1)
     row = await database.fetch_one(query)
     if not row:
-        return
+        return None
 
     placed_words = row["placed_words"]
     for word in placed_words:
-        word["hash"] = hashlib.sha256(word["word"].encode()).hexdigest()
+        if "clue" in word and isinstance(word["clue"], str):
+            word["clue"] = html.unescape(word["clue"]) 
+        if "word" in word and isinstance(word["word"], str):
+            word["hash"] = hashlib.sha256(word["word"].encode("utf-8")).hexdigest()
+        else:
+            word["hash"] = None
 
     return {
         "grid_structure": row["grid_structure"],

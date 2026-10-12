@@ -1,5 +1,6 @@
 .cell-container{
     display: grid;
+    flex: inherit;
 }
 
 

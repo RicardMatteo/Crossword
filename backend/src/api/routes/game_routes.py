@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from services.game_manager import get_room, validate_word
+from services.game_manager import GAMES, get_room, validate_word
 import json
 
 router = APIRouter()
@@ -50,3 +50,27 @@ async def submit_word(attempt: WordAttempt):
                 await validate_word(attempt)  
                 return {"valid": True}
     return {"error": "Unknown word location"}
+
+
+    """public_games = get_public_games()
+    if not public_games:
+        return JSONResponse(status_code=404, content={"error": "No public games found"})
+    return JSONResponse(content=public_games, media_type="application/json; charset=utf-8")
+"""
+
+@router.get("/api/public_games")
+async def get_public_games():
+    """Retrieve a list of public games."""
+    public_games = [
+        {
+            "id": room_id,
+            "owner": game.owner,
+            "game_mode": game.__class__.__name__,
+            "playerCount": len(game.players),
+            "isRanked": game.is_ranked,
+            "status": game.status.value
+        }
+        for room_id, game in GAMES.items()
+        if game.is_public
+    ]
+    return JSONResponse(content=public_games, media_type="application/json; charset=utf-8")

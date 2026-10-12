@@ -1,94 +1,152 @@
-import { useState, useEffect, useRef } from 'react';
+"use client"
+
+/**
+ * Custom hook for WebSocket connection management
+ * Handles real-time multiplayer communication for crossword games
+ */
+
+import { useState, useEffect, useRef } from "react"
 
 const useWebSocket = (roomId, playerName) => {
-    const [token, setToken] = useState(localStorage.getItem(`token-${roomId}`) || null);
-    const wsRef = useRef(null);
-    const [progressOtherPlayers, setProgressOtherPlayers] = useState({});
-    const [progress, setProgress] = useState({});
+  const [token, setToken] = useState(localStorage.getItem(`token-${roomId}`) || null)
+  const wsRef = useRef(null)
+  const reconnectRef = useRef({ attempts: 0, timeoutId: null })
+  const [progressOtherPlayers, setProgressOtherPlayers] = useState({})
+  const [progress, setProgress] = useState({})
+  const [isGameOwner, setIsGameOwner] = useState(false)
+  const [players, setPlayers] = useState([])
 
-    useEffect(() => {
-        if (!playerName || !roomId) {
-            console.log("playerName ou roomId manquant, WebSocket non ouverte");
-            return;
-        }
+  useEffect(() => {
+    if (!playerName || !roomId) {
+      console.log("playerName ou roomId manquant, WebSocket non ouverte")
+      return
+    }
 
-        if (wsRef.current) {
-            console.log("WebSocket déjà connectée, on ne refait pas de connexion");
-            return;
-        }
+    let stopped = false
 
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws/${roomId}`;
-        console.log("Connexion WebSocket à :", wsUrl);
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+    const wsUrl = `${protocol}//${window.location.host}/ws/${roomId}`
 
-        const socket = new WebSocket(wsUrl);
-        wsRef.current = socket;
+    function connect() {
+      if (stopped) return
+      if (wsRef.current) return
+      console.log("Connexion WebSocket à :", wsUrl)
+      const socket = new WebSocket(wsUrl)
+      wsRef.current = socket
 
-        socket.onopen = () => {
-            console.log("WebSocket ouverte");
-            socket.send(JSON.stringify({ type: 'join', name: playerName, token: token}));
-        };
+      socket.onopen = () => {
+        console.log("WebSocket ouverte")
+        reconnectRef.current.attempts = 0
+        // send join with current token (may be null)
+        socket.send(JSON.stringify({ type: "join", name: playerName, token: token }))
+        // ask server to send current players list to avoid missed broadcasts
+        socket.send(JSON.stringify({ type: "request_players" }))
+      }
 
-        socket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error)
+      }
 
-        socket.onmessage = (event) => {
-            try {
-                const msg = JSON.parse(event.data);
-                console.log("WebSocket message received:", msg.type);
+      socket.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data)
+          console.log("WebSocket message received:", msg.type)
 
-                if (msg.type === "token") {
-                    localStorage.setItem(`token-${msg.room_id}`, msg.token);
-                    console.log("Token reçu et stocké:", msg.token, msg.room_id);
-                    setToken(msg.token);
-                } else if (msg.type === "self_progress") {
-                    console.log("Ancienne progression retrouvé :", msg.progress);
-                    setProgress(msg.progress);
-                    console.log("Progression du joueur mise à jour:", progress);
-    
-                    
-                } else if (msg.type === "player_progress") {
-                    console.log("Progression du joueur reçue:", msg.from, msg.progress);
-                    setProgressOtherPlayers(prev => ({
-                        ...prev,
-                        [msg.from]: msg.progress
-                    }));
-                } else if (msg.type === "player_disconnected") {
-                    setProgressOtherPlayers(prev => {
-                        const newProgress = { ...prev };
-                        delete newProgress[msg.from];
-                        return newProgress;
-                    });
-                }
-
-            } catch (err) {
-                console.error("Error processing WebSocket message:", err);
-            }
-        };
-
-        socket.onclose = (event) => {
-            console.log("WebSocket closed:", event.code, event.reason);
-            if (event.code !== 1000) {
-                console.error("WebSocket closed unexpectedly, attempting to reconnect...");
-                setTimeout(() => {
-                    wsRef.current = null;
-                }, 1000);
+          if (msg.type === "token") {
+            localStorage.setItem(`token-${msg.room_id}`, msg.token)
+            console.log("Token reçu et stocké:", msg.token, msg.room_id)
+            setToken(msg.token)
+          } else if (msg.type === "self_progress") {
+            console.log("Ancienne progression retrouvé :", msg.progress)
+            setProgress(msg.progress)
+          } else if (msg.type === "player_progress") {
+            console.log("Progression du joueur reçue:", msg.from, msg.progress)
+            setProgressOtherPlayers((prev) => ({
+              ...prev,
+              [msg.from]: msg.progress,
+            }))
+          } else if (msg.type === "player_disconnected") {
+            setProgressOtherPlayers((prev) => {
+              const newProgress = { ...prev }
+              delete newProgress[msg.from]
+              return newProgress
+            })
+          } else if (msg.type === "game_finished") {
+            console.log("Game finished:", msg.stats)
+            window.dispatchEvent(new CustomEvent("gameFinished", { detail: msg.stats }))
+          } else if (msg.type === "game_started") {
+            console.log("Game started")
+            window.dispatchEvent(new CustomEvent("gameStarted"))
+          } else if (msg.type === "game_owner") {
+            if (msg.owner === playerName) {
+              console.log("You are now the game owner")
+              setIsGameOwner(true)
             } else {
-                console.log("WebSocket closed normally");
-                wsRef.current = null;
+              console.log("Game owner updated:", msg.owner)
+              setIsGameOwner(false)
             }
-        };
+          } else if (msg.type === "players") {
+            console.log("Players list received:", msg.players)
+            setPlayers(msg.players)
+            // Ensure progressOtherPlayers has an entry for each player (even if empty)
+            setProgressOtherPlayers((prev) => {
+              const newProg = { ...prev }
+              msg.players.forEach((p) => {
+                if (!(p in newProg)) newProg[p] = {}
+              })
+              // remove entries for players no longer present
+              Object.keys(newProg).forEach((k) => {
+                if (!msg.players.includes(k)) delete newProg[k]
+              })
+              return newProg
+            })
+          }
+        } catch (err) {
+          console.error("Error processing WebSocket message:", err)
+        }
+      }
 
-        return () => {
-            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                console.log("Cleaning up WebSocket connection");
-                wsRef.current.close(1000, "Cleaning up");
-            }
-        };
-    }, [roomId, playerName]);
+      socket.onclose = (event) => {
+        console.log("WebSocket closed:", event.code, event.reason)
+        wsRef.current = null
+        if (stopped) return
+        // exponential backoff reconnect
+        reconnectRef.current.attempts += 1
+        const wait = Math.min(30000, 1000 * 2 ** reconnectRef.current.attempts)
+        console.warn(`WebSocket closed unexpectedly, reconnecting in ${wait}ms (attempt ${reconnectRef.current.attempts})`)
+        reconnectRef.current.timeoutId = setTimeout(() => {
+          reconnectRef.current.timeoutId = null
+          connect()
+        }, wait)
+      }
+    }
 
-    return { token, progressOtherPlayers, progress };
-};
+    connect()
 
-export default useWebSocket;
+    // Periodically request players list in case broadcasts are missed
+    const playersInterval = setInterval(() => {
+      try {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({ type: "request_players" }))
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    }, 15000)
+
+    return () => {
+      stopped = true
+      clearInterval(playersInterval)
+      if (reconnectRef.current.timeoutId) clearTimeout(reconnectRef.current.timeoutId)
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        console.log("Cleaning up WebSocket connection")
+        wsRef.current.close(1000, "Cleaning up")
+      }
+      wsRef.current = null
+    }
+  }, [roomId, playerName])
+
+  return { token, progressOtherPlayers, progress, isGameOwner, players }
+}
+
+export default useWebSocket

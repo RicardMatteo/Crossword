@@ -1,0 +1,28 @@
+.homepage {
+  min-height: 100vh;
+}
+
+.games-section {
+  padding: 4rem 0;
+  background: var(--bg-primary);
+}
+
+.games-section .section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 3rem;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .games-section {
+    padding: 3rem 0;
+  }
+
+  .games-section .section-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+}

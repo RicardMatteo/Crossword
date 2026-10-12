@@ -15,6 +15,7 @@ class NormalGame(Game):
         self.progress[token] = [
             [False if c == '-' else None for c in row] for row in self.grid["grid_structure"]
         ]
+        await super().join(websocket, name, token)
         return token
 
     async def validate_word(self, attempt):
