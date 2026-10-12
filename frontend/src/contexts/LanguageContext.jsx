@@ -11,6 +11,18 @@ const LanguageContext = createContext()
 
 const translations = {
   fr: {
+    // Homepage
+    homeTitle: "Mots fléchés à plusieurs",
+    homeSubtitle: "Créez un salon, partagez son code et remplissez la même grille que vos amis en voyant leur progression en direct.",
+    yourName: "Votre pseudo",
+    newGame: "Créer une partie",
+    roomCode: "Code du salon",
+    join: "Rejoindre",
+    nameRequired: "Choisissez un pseudo pour jouer.",
+    refresh: "Actualiser",
+    loading: "Chargement…",
+    noPublicGames: "Aucune partie publique en attente pour le moment.",
+    playersShort: "joueur(s)",
     // Navigation
     home: "Accueil",
     profile: "Profil",
@@ -19,12 +31,6 @@ const translations = {
     signup: "Inscription",
 
     // Homepage
-    heroTitle: "Maîtrisez l'Art des",
-    heroTitleHighlight: "Mots Croisés",
-    heroDescription:
-      "Défiez votre esprit avec nos grilles de mots croisés interactives. Jouez en solo ou affrontez vos amis en temps réel.",
-    createGame: "🎮 Créer une Partie",
-    signIn: "👤 Se Connecter",
     publicGames: "Parties Publiques",
 
     // Game
@@ -74,24 +80,20 @@ const translations = {
     backToHome: "🏠 Retour à l'Accueil",
     goBack: "← Retour",
 
-    // Features
-    whyChoose: "Pourquoi Choisir CrosswordMaster ?",
-    featuresDesc:
-      "Découvrez la plateforme de mots croisés la plus avancée avec des fonctionnalités conçues pour les passionnés de puzzles modernes.",
-    smartDifficulty: "Difficulté Intelligente",
-    smartDifficultyDesc: "Puzzles adaptatifs qui correspondent à votre niveau et vous aident à progresser.",
-    multiplayerFun: "Multijoueur Amusant",
-    multiplayerDesc: "Affrontez vos amis ou rejoignez des parties publiques avec des joueurs du monde entier.",
-    crossPlatform: "Multi-Plateforme",
-    crossPlatformDesc: "Jouez de manière transparente sur tous vos appareils avec un design responsive.",
-    achievements: "Succès",
-    achievementsDesc: "Débloquez des badges, suivez vos progrès et grimpez dans les classements.",
-    customThemes: "Thèmes Personnalisés",
-    customThemesDesc: "Personnalisez votre expérience avec les modes clair/sombre et les schémas de couleurs.",
-    realTimePlay: "Jeu en Temps Réel",
-    realTimePlayDesc: "Voyez les progrès des autres joueurs en temps réel avec des mises à jour en direct.",
   },
   en: {
+    // Homepage
+    homeTitle: "Arrow crosswords with friends",
+    homeSubtitle: "Create a room, share its code and fill the same grid as your friends while watching their progress live.",
+    yourName: "Your name",
+    newGame: "Create a game",
+    roomCode: "Room code",
+    join: "Join",
+    nameRequired: "Pick a name to play.",
+    refresh: "Refresh",
+    loading: "Loading…",
+    noPublicGames: "No public game waiting right now.",
+    playersShort: "player(s)",
     // Navigation
     home: "Home",
     profile: "Profile",
@@ -100,12 +102,6 @@ const translations = {
     signup: "Sign Up",
 
     // Homepage
-    heroTitle: "Master the Art of",
-    heroTitleHighlight: "Crosswords",
-    heroDescription:
-      "Challenge your mind with our interactive crossword puzzles. Play solo or compete with friends in real-time multiplayer games.",
-    createGame: "🎮 Create New Game",
-    signIn: "👤 Sign In",
     publicGames: "Public Games",
 
     // Game
@@ -154,24 +150,20 @@ const translations = {
     backToHome: "🏠 Back to Home",
     goBack: "← Go Back",
 
-    // Features
-    whyChoose: "Why Choose CrosswordMaster?",
-    featuresDesc:
-      "Experience the most advanced crossword platform with features designed for modern puzzle enthusiasts.",
-    smartDifficulty: "Smart Difficulty",
-    smartDifficultyDesc: "Adaptive puzzles that match your skill level and help you improve over time.",
-    multiplayerFun: "Multiplayer Fun",
-    multiplayerDesc: "Compete with friends or join public games with players from around the world.",
-    crossPlatform: "Cross-Platform",
-    crossPlatformDesc: "Play seamlessly across all your devices with responsive design and sync.",
-    achievements: "Achievements",
-    achievementsDesc: "Unlock badges, track your progress, and climb the global leaderboards.",
-    customThemes: "Custom Themes",
-    customThemesDesc: "Personalize your experience with light/dark modes and custom color schemes.",
-    realTimePlay: "Real-time Play",
-    realTimePlayDesc: "See other players' progress in real-time with live updates and notifications.",
   },
   es: {
+    // Homepage
+    homeTitle: "Autodefinidos entre amigos",
+    homeSubtitle: "Crea una sala, comparte su código y rellena la misma cuadrícula que tus amigos viendo su progreso en directo.",
+    yourName: "Tu nombre",
+    newGame: "Crear partida",
+    roomCode: "Código de sala",
+    join: "Unirse",
+    nameRequired: "Elige un nombre para jugar.",
+    refresh: "Actualizar",
+    loading: "Cargando…",
+    noPublicGames: "Ninguna partida pública esperando ahora mismo.",
+    playersShort: "jugador(es)",
     // Navigation
     home: "Inicio",
     profile: "Perfil",
@@ -180,12 +172,6 @@ const translations = {
     signup: "Registrarse",
 
     // Homepage
-    heroTitle: "Domina el Arte de los",
-    heroTitleHighlight: "Crucigramas",
-    heroDescription:
-      "Desafía tu mente con nuestros crucigramas interactivos. Juega solo o compite con amigos en tiempo real.",
-    createGame: "🎮 Crear Juego",
-    signIn: "👤 Iniciar Sesión",
     publicGames: "Juegos Públicos",
 
     // Game
@@ -234,24 +220,20 @@ const translations = {
     backToHome: "🏠 Volver al Inicio",
     goBack: "← Volver",
 
-    // Features
-    whyChoose: "¿Por Qué Elegir CrosswordMaster?",
-    featuresDesc:
-      "Experimenta la plataforma de crucigramas más avanzada con características diseñadas para entusiastas modernos.",
-    smartDifficulty: "Dificultad Inteligente",
-    smartDifficultyDesc: "Puzzles adaptativos que coinciden con tu nivel y te ayudan a mejorar.",
-    multiplayerFun: "Diversión Multijugador",
-    multiplayerDesc: "Compite con amigos o únete a juegos públicos con jugadores de todo el mundo.",
-    crossPlatform: "Multiplataforma",
-    crossPlatformDesc: "Juega sin problemas en todos tus dispositivos con diseño responsivo.",
-    achievements: "Logros",
-    achievementsDesc: "Desbloquea insignias, sigue tu progreso y escala en las clasificaciones.",
-    customThemes: "Temas Personalizados",
-    customThemesDesc: "Personaliza tu experiencia con modos claro/oscuro y esquemas de colores.",
-    realTimePlay: "Juego en Tiempo Real",
-    realTimePlayDesc: "Ve el progreso de otros jugadores en tiempo real con actualizaciones en vivo.",
   },
   de: {
+    // Homepage
+    homeTitle: "Schwedenrätsel mit Freunden",
+    homeSubtitle: "Erstelle einen Raum, teile den Code und fülle dasselbe Rätsel wie deine Freunde aus – ihren Fortschritt siehst du live.",
+    yourName: "Dein Name",
+    newGame: "Spiel erstellen",
+    roomCode: "Raumcode",
+    join: "Beitreten",
+    nameRequired: "Wähle einen Namen, um zu spielen.",
+    refresh: "Aktualisieren",
+    loading: "Lädt…",
+    noPublicGames: "Gerade wartet kein öffentliches Spiel.",
+    playersShort: "Spieler",
     // Navigation
     home: "Startseite",
     profile: "Profil",
@@ -260,12 +242,6 @@ const translations = {
     signup: "Registrieren",
 
     // Homepage
-    heroTitle: "Meistere die Kunst der",
-    heroTitleHighlight: "Kreuzworträtsel",
-    heroDescription:
-      "Fordere deinen Geist mit unseren interaktiven Kreuzworträtseln heraus. Spiele allein oder tritt gegen Freunde in Echtzeit an.",
-    createGame: "🎮 Spiel Erstellen",
-    signIn: "👤 Anmelden",
     publicGames: "Öffentliche Spiele",
 
     // Game
@@ -314,22 +290,6 @@ const translations = {
     backToHome: "🏠 Zurück zur Startseite",
     goBack: "← Zurück",
 
-    // Features
-    whyChoose: "Warum CrosswordMaster Wählen?",
-    featuresDesc:
-      "Erlebe die fortschrittlichste Kreuzworträtsel-Plattform mit Features für moderne Rätsel-Enthusiasten.",
-    smartDifficulty: "Intelligente Schwierigkeit",
-    smartDifficultyDesc: "Adaptive Rätsel, die deinem Level entsprechen und dir beim Verbessern helfen.",
-    multiplayerFun: "Mehrspieler-Spaß",
-    multiplayerDesc: "Tritt gegen Freunde an oder tritt öffentlichen Spielen mit Spielern weltweit bei.",
-    crossPlatform: "Plattformübergreifend",
-    crossPlatformDesc: "Spiele nahtlos auf allen deinen Geräten mit responsivem Design.",
-    achievements: "Erfolge",
-    achievementsDesc: "Schalte Abzeichen frei, verfolge deinen Fortschritt und klettere in den Ranglisten.",
-    customThemes: "Benutzerdefinierte Themes",
-    customThemesDesc: "Personalisiere deine Erfahrung mit Hell-/Dunkelmodus und benutzerdefinierten Farbschemata.",
-    realTimePlay: "Echtzeit-Spiel",
-    realTimePlayDesc: "Sieh den Fortschritt anderer Spieler in Echtzeit mit Live-Updates.",
   },
 }
 

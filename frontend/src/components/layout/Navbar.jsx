@@ -72,14 +72,12 @@ const Navbar = () => {
                   {t("logout")}
                 </button>
               </div>
-            ) : currentPlayerName ? (
-              <div className="guest-menu">
-                <span className="guest-name">👤 {currentPlayerName}</span>
-              </div>
             ) : (
-              <div className="auth-placeholder">
-                <span className="guest-text">Guest Mode</span>
-              </div>
+              currentPlayerName && (
+                <div className="guest-menu">
+                  <span className="guest-name">👤 {currentPlayerName}</span>
+                </div>
+              )
             )}
           </div>
         </div>
