@@ -3,10 +3,15 @@ services:
     build: ./backend
     depends_on:
       - crossword-db
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@crossword-db:5432/${POSTGRES_DB}
+    ports:
+      - 8000:8000
     # Mount source for development so backend code changes are picked up
+    # (:z relabels the mounts for SELinux hosts such as Fedora)
     volumes:
-      - ./backend/src:/app/src:cached
-      - ./backend/pyproject.toml:/app/pyproject.toml:ro
+      - ./backend/src:/app/src:z
+      - ./backend/pyproject.toml:/app/pyproject.toml:ro,z
 
   crossword-frontend:
     build: ./frontend
@@ -18,9 +23,9 @@ services:
       - crossword-backend
     # Mount frontend source so Vite HMR works without rebuilding the image
     volumes:
-      - ./frontend/src:/app/src:cached
-      - ./frontend/index.html:/app/index.html:ro
-      - ./frontend/vite.config.js:/app/vite.config.js:ro
+      - ./frontend/src:/app/src:z
+      - ./frontend/index.html:/app/index.html:ro,z
+      - ./frontend/vite.config.js:/app/vite.config.js:ro,z
 
   crossword-db:
     # Pin to Postgres 17 to match the existing data directory and allow a safe
@@ -31,9 +36,8 @@ services:
       - .env
     volumes:
       - crossword-db-data:/var/lib/postgresql/data
-      # Disabled during restore to avoid duplicate initialization while we
-      # import the preserved dump. Re-enable after restore if desired.
-      # - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # Only runs when the data volume is empty (first start)
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro,z
     ports:
       - 5432:5432
 

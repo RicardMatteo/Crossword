@@ -14,29 +14,63 @@
   width: 100%;
 }
 
+/* Every cell (input or clue) takes an equal share of the row and stays square */
+.crossword-row > * {
+  flex: 1 1 0;
+  min-width: 0;
+  aspect-ratio: 1;
+}
+
 .cell-container {
   display: grid;
   position: relative;
-  flex: initial;
-  aspect-ratio: 1;
+}
+
+.cell-container > input {
+  width: 100% !important;
+  height: 100% !important;
   min-width: 0;
 }
 
-/* Clue text handling: wrap, ellipsize, and provide tooltip for full text */
+.clue-cell {
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Clue cells: FitText shrinks the font so whole words fit, never split mid-word */
+.clue-cell {
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  overflow: hidden;
+}
+
 .clue-text {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: manual;
+  line-height: 1.1;
+}
+
+.clue-text > span {
   display: block;
   width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  -webkit-line-clamp: 3; /* clamp to 3 lines */
-  -webkit-box-orient: vertical;
-  display: -webkit-box;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  hyphens: auto;
-  line-height: 1.1;
-  max-height: calc(1.1em * 3);
+  text-align: center;
+}
+
+.clue-separator {
+  width: 90%;
+  margin: 1px auto;
+  border: 0;
+  border-top: 1px solid var(--border-color);
 }
 
 .right-triangle {

@@ -1,8 +1,6 @@
 "use client"
+import { useLayoutEffect, useRef } from "react"
 import "./CrosswordGridDisplay.css"
-// No external hyphenation package here (keeps frontend install/build stable).
-// We use a small, safe fallback hyphenation that inserts soft-hyphens
-// at reasonable positions if a proper hyphenation library isn't available.
 
 const cellStyle = {
   width: "5rem",
@@ -17,6 +15,34 @@ const cellStyle = {
   textAlign: "center",
 }
 
+const MAX_CLUE_FONT_PX = 14
+const MIN_CLUE_FONT_PX = 6
+
+/**
+ * Clue text that shrinks its font until it fits its box without breaking words
+ */
+function FitText({ text }) {
+  const ref = useRef(null)
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    let size = MAX_CLUE_FONT_PX
+    el.style.fontSize = `${size}px`
+    while (size > MIN_CLUE_FONT_PX && (el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight)) {
+      size -= 0.5
+      el.style.fontSize = `${size}px`
+    }
+  }, [text])
+
+  return (
+    <div ref={ref} className="clue-text" title={text}>
+      {/* block child: an overflowing word spills right, where scrollWidth sees it */}
+      <span>{text}</span>
+    </div>
+  )
+}
+
 /**
  * Clue cell component that displays crossword clues
  * Handles single and double clue display with proper formatting
@@ -28,123 +54,29 @@ function ClueCell({ clues, definitionMap }) {
   function getDefinition(clue) {
     const clueStr = clue?.toString()
     if (!clueStr) return ""
-    // decode HTML entities (in case backend sent &eacute; or similar)
-    function decodeHtmlEntities(input) {
-      if (!input || typeof input !== "string") return input
-      try {
-        const txt = document.createElement("textarea")
-        txt.innerHTML = input
-        return txt.value
-      } catch (e) {
-        return input
-      }
-    }
-
-    // Simple fallback hyphenation: insert soft-hyphens at sensible breakpoints.
-    // This is not linguistically perfect but prevents overflow and keeps builds
-    // simple (no extra npm packages required).
-    function hyphenateFallback(s) {
-      if (!s || typeof s !== "string") return s
-      // If shorter than 12 chars, no need to hyphenate
-      const chunk = 12
-      if (s.length <= chunk) return s
-
-      // Try to break at common separators (spaces, punctuation) first
-      // Otherwise insert soft-hyphens every `chunk` characters inside long words.
-      return s.replace(/(\S{12,})/gu, (word) => {
-        // prefer breaking on hyphen-like chars (dash, slash), preserve them
-        if (/[-\/]/.test(word)) {
-          return word.replace(/([\-\/])/g, "$1")
-        }
-        // insert soft hyphens every `chunk` chars inside the long segment
-        return word.replace(new RegExp(`(.{1,${chunk}})`, "gu"), "$1\u00AD").replace(/\u00AD$/, "")
-      })
-    }
-
-  if (definitionMap[clueStr]) return hyphenateFallback(decodeHtmlEntities(definitionMap[clueStr]))
+    if (definitionMap[clueStr]) return definitionMap[clueStr]
     // Try swapping last char V<->H
-    if (clueStr.endsWith("V")) {
-      const swapped = clueStr.slice(0, -1) + "H"
-  return hyphenateFallback(decodeHtmlEntities(definitionMap[swapped])) || `Not Found, ${clue}`
-    }
-    if (clueStr.endsWith("H")) {
-      const swapped = clueStr.slice(0, -1) + "V"
-  return hyphenateFallback(decodeHtmlEntities(definitionMap[swapped])) || `Not Found, ${clue}`
-    }
-    return `Not Found, ${clue}`
+    const swapped = clueStr.endsWith("V") ? clueStr.slice(0, -1) + "H" : clueStr.slice(0, -1) + "V"
+    return definitionMap[swapped] || `Not Found, ${clue}`
   }
 
   return (
     <div
       lang="fr"
+      className="clue-cell"
       style={{
         ...cellStyle, // Use the same cellStyle as InputCell
         backgroundColor: "var(--bg-secondary)",
-        padding: "4px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        textAlign: "center",
-        overflow: "hidden",
-        fontSize: "clamp(0.6rem, 2vw, 1rem)",
-        lineHeight: 1.2,
-        wordBreak: "break-word",
-        hyphens: "auto",
-        whiteSpace: "normal",
         color: "var(--text-primary)",
         border: "0.2px solid var(--border-color)",
       }}
     >
-      {clues?.length === 1 && (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "2px",
-          }}
-        >
-          <div className="clue-text" title={getDefinition(clues[0])}>
-            {getDefinition(clues[0])}
-          </div>
-        </div>
-      )}
+      {clues?.length === 1 && <FitText text={getDefinition(clues[0])} />}
       {isDouble && (
         <>
-          <div
-            style={{
-              flex: 1,
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "1px",
-              fontSize: "clamp(0.5rem, 1.5vw, 0.8rem)",
-            }}
-          >
-            <div className="clue-text" title={getDefinition(clues[0])}>
-              {getDefinition(clues[0])}
-            </div>
-          </div>
-          <hr style={{ width: "90%", margin: "1px 0", border: "0.5px solid var(--border-color)" }} />
-          <div
-            style={{
-              flex: 1,
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "1px",
-              fontSize: "clamp(0.5rem, 1.5vw, 0.8rem)",
-            }}
-          >
-            <div className="clue-text" title={getDefinition(clues[1])}>
-              {getDefinition(clues[1])}
-            </div>
-          </div>
+          <FitText text={getDefinition(clues[0])} />
+          <hr className="clue-separator" />
+          <FitText text={getDefinition(clues[1])} />
         </>
       )}
     </div>
