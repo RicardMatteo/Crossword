@@ -27,12 +27,25 @@ function FitText({ text }) {
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    let size = MAX_CLUE_FONT_PX
-    el.style.fontSize = `${size}px`
-    while (size > MIN_CLUE_FONT_PX && (el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight)) {
-      size -= 0.5
+    const fit = () => {
+      let size = MAX_CLUE_FONT_PX
       el.style.fontSize = `${size}px`
+      while (size > MIN_CLUE_FONT_PX && (el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight)) {
+        size -= 0.5
+        el.style.fontSize = `${size}px`
+      }
     }
+    fit()
+    // Refit when the cell is resized (window resize, grid scaled to its container)
+    let lastWidth = el.clientWidth
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth !== lastWidth) {
+        lastWidth = el.clientWidth
+        fit()
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [text])
 
   return (
@@ -87,7 +100,7 @@ function ClueCell({ clues, definitionMap }) {
  * Input cell component for crossword letters
  * Handles user input, focus states, and directional arrows
  */
-const statusColors = { found: "var(--success-color)", missed: "var(--danger-color)" }
+const statusColors = { found: "var(--success-color)", missed: "var(--danger-color)", revealed: "var(--warning-color)" }
 
 function InputCell({ cell, rowIndex, colIndex, inputRefs, handleKeyDown, onFocus, isInWord, isFocused, arrow, status }) {
   return (
@@ -145,7 +158,7 @@ export default function CrosswordGridDisplay({
   isInFocusedWord,
   definitionMap,
   arrowMap,
-  cellStatus, // optional grid of "found" / "missed": shows a revealed, read-only grid
+  cellStatus, // optional grid of "found" / "missed" / "revealed" / "empty": shows a read-only grid
 }) {
   return (
     <div lang="fr" className="crossword-grid">

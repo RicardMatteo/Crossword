@@ -7,7 +7,7 @@ import { useLanguage } from "../contexts/LanguageContext"
 import CrosswordGridDisplay from "../components/crossword/CrosswordGridDisplay"
 import PlayerProgress from "../components/crossword/PlayerProgress"
 import TeamProgress from "../components/crossword/TeamProgress"
-import { getWordBounds, isLongEnough, generateArrowMap } from "../utils/gridUtils"
+import { getWordBounds, isLongEnough, buildGridView } from "../utils/gridUtils"
 import { fetchGridData, submitWord } from "../utils/apiUtils"
 import useWebSocket from "../hooks/useWebSocket"
 import SEO from "../components/SEO"
@@ -111,51 +111,19 @@ export default function GamePage() {
 
         setGridStructure(data.grid_structure)
 
-        // Initialize input grid
-        const initialGrid = data.grid_structure.map((row) => row.split("").map((c) => (c === "-" ? "" : null)))
+        const view = buildGridView(data)
+        const initialGrid = view.cells
 
-        // Initialize arrow map
-        const arrowMapInit = data.grid_structure.map((row) => row.split("").map((_) => ""))
-
-        // Apply existing progress if available
-        if (progress) {
-          initialGrid.forEach((rowArr, r) => {
-            rowArr.forEach((cell, c) => {
-              if (cell === null && progress[r]?.[c]) {
-                initialGrid[r][c] = progress[r][c]
-              }
-            })
-          })
-        }
-
+        // Found letters are applied by the progress effect below
         setInputGrid(initialGrid)
         setPlacedWords(data.placed_words)
-        setArrowMap(generateArrowMap(arrowMapInit, data.placed_words))
+        setArrowMap(view.arrowMap)
 
         // Initialize input refs
         inputRefs.current = initialGrid.map((row) => row.map(() => React.createRef()))
 
-        // Setup clue grid
-        const clueGrid = data.grid_structure.map((row) => row.split("").map(() => null))
-        let clueIndex = 0
-        for (let row = 0; row < data.grid_structure.length; row++) {
-          const line = data.grid_structure[row]
-          for (let col = 0; col < line.length; col++) {
-            if (line[col] === "/" || line[col] === "#") {
-              clueGrid[row][col] = data.grid_def_order[clueIndex]
-              clueIndex++
-            }
-          }
-        }
-        setGridClueOrder(clueGrid)
-
-        // Setup definition map
-        const defMap = {}
-        data.placed_words.forEach((word) => {
-          const key = `${word.number}${word.direction}`
-          defMap[key] = word.clue
-        })
-        setDefinitionMap(defMap)
+        setGridClueOrder(view.clueOrder)
+        setDefinitionMap(view.definitionMap)
       } catch (error) {
         console.error("Error loading grid data:", error)
         setError("Failed to load game data. Please try again.")

@@ -1,6 +1,8 @@
 import asyncio
 import os
 import random
+import re
+import unicodedata
 
 import websockets
 
@@ -8,6 +10,17 @@ import websockets
 # Overridable to point the backend at a fake IRC server in tests.
 IRC_URL = os.getenv("TWITCH_IRC_URL", "wss://irc-ws.chat.twitch.tv:443")
 MAX_RETRY_DELAY = 60
+CHANNEL_RE = re.compile(r"^[a-z0-9_]{3,25}$")
+
+
+def chat_word(text):
+    """The word a chat message proposes, or None: the message must be the word
+    alone. Case, accents, surrounding spaces and invisible characters (added by
+    some chat clients) are ignored."""
+    plain = unicodedata.normalize("NFD", text.upper())
+    plain = "".join(c for c in plain if not unicodedata.combining(c) and not unicodedata.category(c).startswith("C"))
+    plain = plain.strip()
+    return plain if re.fullmatch(r"[A-Z]{2,}", plain) else None
 
 
 def parse_irc(line):
@@ -27,7 +40,7 @@ def parse_irc(line):
 
 
 class TwitchChat:
-    """Reads a channel's chat and calls `on_message(viewer, text)` for each message.
+    """Reads a channel's chat and calls `on_message(viewer, text, login)` for each message.
 
     `on_status(status)` is told "connecting", "connected" or "disconnected";
     the connection is retried with a growing delay until `stop()`.
@@ -81,8 +94,9 @@ class TwitchChat:
             elif command == "RECONNECT":  # Twitch asks clients to reconnect
                 return "reconnect"
             elif command == "PRIVMSG" and trailing:
-                viewer = tags.get("display-name") or prefix.split("!", 1)[0]
+                login = prefix.split("!", 1)[0]
+                viewer = tags.get("display-name") or login
                 try:
-                    await self.on_message(viewer, trailing)
+                    await self.on_message(viewer, trailing, login)
                 except Exception as e:
                     print(f"Twitch chat #{self.channel}: error handling message: {e!r}")

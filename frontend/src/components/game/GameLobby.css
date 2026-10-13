@@ -236,3 +236,12 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
 }
+
+.twitch-overlay-link {
+  margin-top: 0.75rem;
+}
+
+.twitch-overlay-link a {
+  color: #9146ff;
+  font-weight: 600;
+}

@@ -1,0 +1,186 @@
+/* Stream overlay: fills the browser source (designed for 16:9, e.g. 1920x1080) */
+.overlay {
+  display: flex;
+  gap: 1.5vw;
+  width: 100vw;
+  height: 100vh;
+  padding: 2vh 1.5vw;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.overlay.is-transparent {
+  background: transparent;
+}
+
+.overlay-message {
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+
+.overlay-grid-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay-grid .crossword-grid {
+  margin: 0;
+}
+
+.overlay-side {
+  width: 26vw;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2vh;
+  min-height: 0;
+}
+
+.overlay-panel {
+  background: var(--bg-primary);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.2vh 1.2vw;
+}
+
+.overlay-panel h2 {
+  margin: 0 0 0.6vh;
+  font-size: clamp(0.8rem, 1vw, 1.2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.overlay-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  border-left: 4px solid #9146ff;
+}
+
+.overlay-channel {
+  font-weight: 700;
+  color: #9146ff;
+  font-size: clamp(1rem, 1.3vw, 1.6rem);
+}
+
+.overlay-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3vh;
+  text-align: center;
+  background: #9146ff;
+  color: white;
+}
+
+.overlay-cta strong {
+  font-size: clamp(1.1rem, 1.6vw, 2rem);
+  line-height: 1.2;
+}
+
+.overlay-cta span {
+  font-size: clamp(0.9rem, 1vw, 1.2rem);
+  opacity: 0.9;
+}
+
+.overlay-cta .overlay-next {
+  font-size: clamp(1rem, 1.3vw, 1.6rem);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.overlay-bar {
+  height: 1.2vh;
+  min-height: 8px;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.overlay-bar-fill {
+  height: 100%;
+  background: var(--success-color);
+  transition: width 0.4s ease;
+}
+
+.overlay-progress-text {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5vh;
+  font-size: clamp(0.9rem, 1.1vw, 1.3rem);
+  font-weight: 600;
+}
+
+.overlay-hint {
+  margin: 0.6vh 0 0;
+  color: var(--warning-color);
+  font-weight: 600;
+  font-size: clamp(0.9rem, 1vw, 1.2rem);
+}
+
+.overlay-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(0.9rem, 1.1vw, 1.3rem);
+}
+
+.overlay-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.25vh 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.overlay-list li span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+ol.overlay-list {
+  counter-reset: rank;
+}
+
+ol.overlay-list li::before {
+  counter-increment: rank;
+  content: counter(rank) ".";
+  width: 1.8em;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+ol.overlay-list li span:first-child {
+  flex: 1;
+}
+
+.overlay-word {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--success-color);
+}
+
+.overlay-feed-hint {
+  color: var(--warning-color);
+}
+
+.overlay-empty {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: clamp(0.85rem, 1vw, 1.1rem);
+}
+
+.overlay-top {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}

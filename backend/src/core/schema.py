@@ -37,6 +37,18 @@ SCHEMA = [
     )
     """,
     "CREATE INDEX IF NOT EXISTS game_results_user_idx ON game_results (user_id, played_at DESC)",
+    # Twitch viewers' scores per channel, accumulated over the overlay's grids
+    """
+    CREATE TABLE IF NOT EXISTS twitch_scores (
+        channel VARCHAR(25) NOT NULL,
+        login VARCHAR(25) NOT NULL,
+        display_name VARCHAR(50) NOT NULL,
+        words INTEGER NOT NULL DEFAULT 0,
+        grids INTEGER NOT NULL DEFAULT 0,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        PRIMARY KEY (channel, login)
+    )
+    """,
 ]
 
 

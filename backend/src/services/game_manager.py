@@ -1,10 +1,8 @@
 from crud.game_crud import get_random_grid
 from crud.user_crud import name_taken
-from services.twitch_chat import TwitchChat
+from services.twitch_chat import CHANNEL_RE, TwitchChat, chat_word
 from utils.normalize import normalize_grid
 from types import SimpleNamespace
-import re
-import unicodedata
 import uuid
 
 from core.game_modes.normal_game import NormalGame
@@ -162,40 +160,27 @@ async def join_room(room_id, websocket, name, token=None, user=None) -> dict:
 # --- Twitch plays -----------------------------------------------------------
 
 TWITCH_CHATS = {}  # room_id -> TwitchChat reading the room's linked channel
-TWITCH_CHANNEL_RE = re.compile(r"^[a-z0-9_]{3,25}$")
-
-
-def chat_guesses(text):
-    """Words a chat message may be proposing: each word, plus all of them glued
-    together (answers like "ILYA" may be typed "il y a"). Accents are dropped."""
-    plain = unicodedata.normalize("NFD", text.upper())
-    plain = "".join(c for c in plain if not unicodedata.combining(c))
-    words = re.findall(r"[A-Z]+", plain)
-    guesses = {w for w in words if len(w) >= 2}
-    if len(words) > 1:
-        guesses.add("".join(words))
-    return guesses
 
 
 async def on_twitch_message(room_id, viewer, text):
-    """A viewer's message fills every word of the grid it names, wherever it is."""
+    """A message made of a single grid word fills it, wherever it is."""
     game = GAMES.get(room_id)
     if not game or game.status != GameStatus.IN_PROGRESS or game.twitch_token not in game.players:
         return
+    guess = chat_word(text)
+    if not guess:
+        return
     token = game.twitch_token
-    for guess in chat_guesses(text):
-        for word in game.grid["placed_words"]:
-            if word["word"] != guess or game.is_word_found(token, word):
-                continue
-            await apply_word(game, SimpleNamespace(
-                room_id=room_id, token=token, guess=guess, length=word["length"],
-                row=word["row"], col=word["col"], direction=word["direction"],
-            ))
-            game.credit_viewer(viewer, guess)
-            await game.send_message_to_all(game.twitch_message())
-            if game.status != GameStatus.IN_PROGRESS:  # that word ended the game
-                return
-            break  # one occurrence per guess
+    for word in game.grid["placed_words"]:
+        if word["word"] != guess or game.is_word_found(token, word):
+            continue
+        await apply_word(game, SimpleNamespace(
+            room_id=room_id, token=token, guess=guess, length=word["length"],
+            row=word["row"], col=word["col"], direction=word["direction"],
+        ))
+        game.credit_viewer(viewer, guess)
+        await game.send_message_to_all(game.twitch_message())
+        return  # one occurrence per message
 
 
 async def on_twitch_status(room_id, status):
@@ -210,7 +195,7 @@ def start_twitch(game):
     stop_twitch(room_id)
     chat = TwitchChat(
         game.twitch_channel,
-        on_message=lambda viewer, text: on_twitch_message(room_id, viewer, text),
+        on_message=lambda viewer, text, login: on_twitch_message(room_id, viewer, text),
         on_status=lambda status: on_twitch_status(room_id, status),
     )
     TWITCH_CHATS[room_id] = chat
@@ -228,7 +213,7 @@ async def link_twitch(game, channel) -> None:
     if game.status != GameStatus.WAITING_FOR_PLAYERS:
         return
     channel = (channel or "").strip().lstrip("#").lower()
-    if channel and not TWITCH_CHANNEL_RE.match(channel):
+    if channel and not CHANNEL_RE.match(channel):
         await game.send_message_to_all({"type": "twitch", "error": "invalid_channel", **game.twitch_message()})
         return
     if channel:

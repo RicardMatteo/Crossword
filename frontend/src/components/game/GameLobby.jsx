@@ -140,15 +140,23 @@ const GameLobby = ({
           <h3>{t("twitchPlays")}</h3>
           <p className="setting-hint">{t("twitchHint")}</p>
           {twitch?.channel ? (
-            <div className="twitch-linked">
-              <span className="twitch-channel">twitch.tv/{twitch.channel}</span>
-              <TwitchStatus status={twitch.status} />
-              {isOwner && (
-                <button className="btn btn-secondary" onClick={() => onLinkTwitch(null)}>
-                  {t("twitchUnlink")}
-                </button>
-              )}
-            </div>
+            <>
+              <div className="twitch-linked">
+                <span className="twitch-channel">twitch.tv/{twitch.channel}</span>
+                <TwitchStatus status={twitch.status} />
+                {isOwner && (
+                  <button className="btn btn-secondary" onClick={() => onLinkTwitch(null)}>
+                    {t("twitchUnlink")}
+                  </button>
+                )}
+              </div>
+              <p className="setting-hint twitch-overlay-link">
+                <a href={`/overlay/${twitch.channel}`} target="_blank" rel="noreferrer">
+                  {t("overlayLink")} ↗
+                </a>{" "}
+                — {t("overlayLinkHint")}
+              </p>
+            </>
           ) : isOwner ? (
             <form
               className="twitch-form"
