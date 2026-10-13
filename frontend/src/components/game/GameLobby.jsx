@@ -12,7 +12,7 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players 
   const { t } = useLanguage()
   const { getCurrentPlayerName } = useAuth()
   const [gameSettings, setGameSettings] = useState({
-    gameMode: "classic",
+    gameMode: "classic", // "classic" | "coop"
     privacy: "public",
     ranked: false,
     maxPlayers: 4,
@@ -28,9 +28,8 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players 
   ]
 
   const gameModes = [
-    { value: "classic", label: "Classic" },
-    { value: "speed", label: "Speed" },
-    { value: "collaborative", label: "Collaborative" },
+    { value: "classic", label: t("modeClassic") },
+    { value: "coop", label: t("modeCoop") },
   ]
 
   const privacyOptions = [
@@ -115,22 +114,25 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players 
                 </select>
               </div>
 
-              <div className="setting-group">
-                <label>{t("endRule")}</label>
-                <select
-                  value={gameSettings.endRule}
-                  onChange={(e) => handleSettingChange("endRule", e.target.value)}
-                  className="setting-select"
-                >
-                  {endRules.map((rule) => (
-                    <option key={rule.value} value={rule.value}>
-                      {rule.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Coop ends when the shared grid is complete: no end rule to pick */}
+              {gameSettings.gameMode === "classic" && (
+                <div className="setting-group">
+                  <label>{t("endRule")}</label>
+                  <select
+                    value={gameSettings.endRule}
+                    onChange={(e) => handleSettingChange("endRule", e.target.value)}
+                    className="setting-select"
+                  >
+                    {endRules.map((rule) => (
+                      <option key={rule.value} value={rule.value}>
+                        {rule.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-              {gameSettings.endRule === "delay" && (
+              {gameSettings.gameMode === "classic" && gameSettings.endRule === "delay" && (
                 <div className="setting-group">
                   <label>{t("endDelaySeconds")}</label>
                   <input
@@ -191,7 +193,13 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players 
           {isOwner ? (
             <button
               className={`btn btn-primary btn-large ${!canStartGame ? "disabled" : ""}`}
-              onClick={() => onStartGame({ endRule: gameSettings.endRule, endDelay: gameSettings.endDelay })}
+              onClick={() =>
+                onStartGame({
+                  mode: gameSettings.gameMode,
+                  endRule: gameSettings.endRule,
+                  endDelay: gameSettings.endDelay,
+                })
+              }
               disabled={!canStartGame}
             >
               {canStartGame ? t("startGame") : t("waitingForPlayers")}

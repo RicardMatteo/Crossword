@@ -16,7 +16,7 @@ const useWebSocket = (roomId, playerName) => {
   const [isGameOwner, setIsGameOwner] = useState(false)
   const [players, setPlayers] = useState([])
   const [gameStarted, setGameStarted] = useState(false)
-  // { endRule, endDelay } announced by the server when the game starts
+  // { mode, endRule, endDelay } announced by the server when the game starts
   const [gameRules, setGameRules] = useState(null)
   // [{ name, time }] in finishing order
   const [finishedPlayers, setFinishedPlayers] = useState([])
@@ -24,6 +24,8 @@ const useWebSocket = (roomId, playerName) => {
   const [endsAt, setEndsAt] = useState(null)
   // { ranking, solution, found, duration } once the game is over
   const [result, setResult] = useState(null)
+  // Coop only: { percent, contributions: { name: letters } } of the shared grid
+  const [teamProgress, setTeamProgress] = useState(null)
   // Incremented on each new round so the page reloads the grid
   const [round, setRound] = useState(0)
 
@@ -71,6 +73,10 @@ const useWebSocket = (roomId, playerName) => {
           } else if (msg.type === "self_progress") {
             console.log("Ancienne progression retrouvé :", msg.progress)
             setProgress(msg.progress)
+          } else if (msg.type === "team_progress") {
+            // Coop: the shared grid's found letters, applied like our own progress
+            setProgress(msg.progress)
+            setTeamProgress({ percent: msg.percent, contributions: msg.contributions })
           } else if (msg.type === "player_progress") {
             console.log("Progression du joueur reçue:", msg.from, msg.progress)
             setProgressOtherPlayers((prev) => ({
@@ -88,7 +94,7 @@ const useWebSocket = (roomId, playerName) => {
             setEndsAt(null)
           } else if (msg.type === "game_started") {
             setGameStarted(true)
-            setGameRules({ endRule: msg.endRule, endDelay: msg.endDelay })
+            setGameRules({ mode: msg.mode, endRule: msg.endRule, endDelay: msg.endDelay })
             setFinishedPlayers(msg.finished || [])
           } else if (msg.type === "player_finished") {
             setFinishedPlayers((prev) =>
@@ -102,6 +108,7 @@ const useWebSocket = (roomId, playerName) => {
             setFinishedPlayers([])
             setEndsAt(null)
             setResult(null)
+            setTeamProgress(null)
             setProgress({})
             setProgressOtherPlayers((prev) => Object.fromEntries(Object.keys(prev).map((k) => [k, {}])))
             setRound((r) => r + 1)
@@ -178,7 +185,7 @@ const useWebSocket = (roomId, playerName) => {
     }
   }
 
-  // settings: { endRule: "first" | "all" | "delay", endDelay: seconds }
+  // settings: { mode: "classic" | "coop", endRule: "first" | "all" | "delay", endDelay: seconds }
   const startGame = (settings = {}) => send({ type: "start_game", ...settings })
   const restartGame = () => send({ type: "restart_game" })
 
@@ -193,6 +200,7 @@ const useWebSocket = (roomId, playerName) => {
     finishedPlayers,
     endsAt,
     result,
+    teamProgress,
     round,
     startGame,
     restartGame,

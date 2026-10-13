@@ -1,4 +1,3 @@
-from utils.websocket_utils import send_message_to_all_except
 from crud.game_crud import get_random_grid
 from utils.normalize import normalize_grid
 import uuid
@@ -23,18 +22,25 @@ async def validate_word(attempt) -> None:
         return
 
     await game.validate_word(attempt)
-
-    progress = game.get_progress_for(attempt.token)
-    await send_message_to_all_except(
-        game,
-        attempt.token,
-        {
-            "type": "player_progress",
-            "from": game.players[attempt.token].name,
-            "progress": progress
-        }
-    )
+    await game.broadcast_progress(attempt.token)
     await game.on_player_progress(attempt.token)
+
+
+GAME_MODES = {"classic": NormalGame, "coop": CoopGame}
+
+
+def set_mode(game, mode) -> Game:
+    """Switch a room to another game mode before it starts, keeping players, owner and grid."""
+    cls = GAME_MODES.get(mode, NormalGame)
+    if type(game) is cls:
+        return game
+    new_game = cls(game.room_id, game.grid, game.owner)
+    new_game.players = game.players
+    new_game.is_public = game.is_public
+    new_game.is_ranked = game.is_ranked
+    new_game.reset_progress()
+    GAMES[game.room_id] = new_game
+    return new_game
 
 
 async def restart_room(game) -> None:

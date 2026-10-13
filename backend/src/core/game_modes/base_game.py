@@ -13,6 +13,7 @@ DEFAULT_END_DELAY = 60
 MAX_END_DELAY = 600
 
 class Game(ABC):
+    mode = None  # "classic" or "coop", set by subclasses
     class Player:
         def __init__(self, token, name, websocket=None):
             self.token = token
@@ -111,6 +112,7 @@ class Game(ABC):
     def started_message(self):
         return {
             "type": "game_started",
+            "mode": self.mode,
             "endRule": self.end_rule,
             "endDelay": self.end_delay,
             # lets a reconnecting player know who already finished
@@ -119,6 +121,14 @@ class Game(ABC):
                 for t, time_ in sorted(self.finish_times.items(), key=lambda item: item[1])
             ],
         }
+
+    async def broadcast_progress(self, token):
+        """Tell the other players about `token`'s progress after a validated word."""
+        await self.send_message_to_all_except(token, {
+            "type": "player_progress",
+            "from": self.players[token].name,
+            "progress": self.get_progress_for(token),
+        })
 
     async def on_player_progress(self, token):
         """Record when a player completes the grid, then apply the end rule."""
@@ -250,6 +260,14 @@ class Game(ABC):
         else:
             raise ValueError("New owner must be a player in the game.")
         await self.send_message_to_all(self.players_message())
+
+    async def send_message_to_all_except(self, excluded_token, message):
+        for token, player in self.players.items():
+            if token != excluded_token and player.is_connected and player.websocket:
+                try:
+                    await player.websocket.send_json(message)
+                except Exception as e:
+                    print(f"Error sending message to player {token}: {e}")
 
     async def send_message_to_all(self, message):
         for player in self.players.values():

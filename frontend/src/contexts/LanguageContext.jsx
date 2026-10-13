@@ -12,6 +12,13 @@ const LanguageContext = createContext()
 const translations = {
   fr: {
     // Game end
+    modeClassic: "Classique (chacun sa grille)",
+    modeCoop: "Coop (grille commune)",
+    modeInfo_coop: "Coop : tout le monde remplit la même grille.",
+    teamProgress: "Grille commune",
+    lettersShort: "lettres",
+    teamFinished: "Grille terminée en équipe en {time} !",
+    contribution: "Part de la grille",
     endRule: "Fin de partie",
     endRuleFirst: "Le premier qui finit",
     endRuleAll: "Quand tous ont fini",
@@ -104,6 +111,13 @@ const translations = {
   },
   en: {
     // Game end
+    modeClassic: "Classic (one grid each)",
+    modeCoop: "Coop (shared grid)",
+    modeInfo_coop: "Coop: everyone fills the same grid.",
+    teamProgress: "Shared grid",
+    lettersShort: "letters",
+    teamFinished: "Grid completed as a team in {time}!",
+    contribution: "Share of the grid",
     endRule: "Game end",
     endRuleFirst: "First to finish",
     endRuleAll: "When everyone is done",
@@ -195,6 +209,13 @@ const translations = {
   },
   es: {
     // Game end
+    modeClassic: "Clásico (cada uno su cuadrícula)",
+    modeCoop: "Coop (cuadrícula compartida)",
+    modeInfo_coop: "Coop: todos rellenan la misma cuadrícula.",
+    teamProgress: "Cuadrícula compartida",
+    lettersShort: "letras",
+    teamFinished: "¡Cuadrícula completada en equipo en {time}!",
+    contribution: "Parte de la cuadrícula",
     endRule: "Fin de la partida",
     endRuleFirst: "El primero en terminar",
     endRuleAll: "Cuando todos terminen",
@@ -286,6 +307,13 @@ const translations = {
   },
   de: {
     // Game end
+    modeClassic: "Klassisch (jeder sein Rätsel)",
+    modeCoop: "Koop (gemeinsames Rätsel)",
+    modeInfo_coop: "Koop: Alle füllen dasselbe Rätsel aus.",
+    teamProgress: "Gemeinsames Rätsel",
+    lettersShort: "Buchstaben",
+    teamFinished: "Rätsel im Team in {time} gelöst!",
+    contribution: "Anteil am Rätsel",
     endRule: "Spielende",
     endRuleFirst: "Wer zuerst fertig ist",
     endRuleAll: "Wenn alle fertig sind",

@@ -81,3 +81,43 @@
     min-width: 120px;
   }
 }
+
+/* Coop team panel */
+.team-bar {
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.team-bar-fill {
+  height: 100%;
+  background: var(--success-color);
+  transition: width 0.4s ease;
+}
+
+.team-percent {
+  margin: 0.4rem 0 1rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.team-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.team-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.team-list li.is-me {
+  font-weight: 600;
+}

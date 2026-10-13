@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext"
 import { useLanguage } from "../contexts/LanguageContext"
 import CrosswordGridDisplay from "../components/crossword/CrosswordGridDisplay"
 import PlayerProgress from "../components/crossword/PlayerProgress"
+import TeamProgress from "../components/crossword/TeamProgress"
 import { getWordBounds, isLongEnough, generateArrowMap } from "../utils/gridUtils"
 import { fetchGridData, submitWord } from "../utils/apiUtils"
 import useWebSocket from "../hooks/useWebSocket"
@@ -54,6 +55,7 @@ export default function GamePage() {
     finishedPlayers,
     endsAt,
     result,
+    teamProgress,
     round,
     startGame,
     restartGame,
@@ -64,6 +66,7 @@ export default function GamePage() {
 
   // The server drives the phase: lobby -> playing (owner starts) -> finished (end rule met)
   const gamePhase = result ? "finished" : gameStarted ? "playing" : "lobby"
+  const isCoop = gameRules?.mode === "coop"
 
   // Seconds left before the "delay" rule ends the game
   const [secondsLeft, setSecondsLeft] = useState(null)
@@ -478,6 +481,8 @@ export default function GamePage() {
         {gamePhase === "finished" && (
           <GameResults
             ranking={result.ranking}
+            duration={result.duration}
+            isCoop={isCoop}
             playerName={playerName}
             isOwner={isGameOwner}
             onPlayAgain={handlePlayAgain}
@@ -531,7 +536,9 @@ export default function GamePage() {
 
         {gamePhase === "playing" && gameRules && (
           <div className="game-status">
-            <span className="game-rule">{t(`endRuleInfo_${gameRules.endRule}`).replace("{s}", gameRules.endDelay)}</span>
+            <span className="game-rule">
+              {isCoop ? t("modeInfo_coop") : t(`endRuleInfo_${gameRules.endRule}`).replace("{s}", gameRules.endDelay)}
+            </span>
             {statusMessages.map((message) => (
               <strong key={message}>{message}</strong>
             ))}
@@ -557,7 +564,11 @@ export default function GamePage() {
           </div>
 
           <div className="progress-section">
-            <PlayerProgress progressOtherPlayers={progressOtherPlayers} gridStructure={gridStructure} />
+            {isCoop ? (
+              <TeamProgress teamProgress={teamProgress} players={players} playerName={playerName} />
+            ) : (
+              <PlayerProgress progressOtherPlayers={progressOtherPlayers} gridStructure={gridStructure} />
+            )}
           </div>
         </div>
       </div>

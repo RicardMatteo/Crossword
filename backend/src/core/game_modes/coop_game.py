@@ -3,6 +3,9 @@ from utils.game_status import GameStatus
 from core.player import Player
 
 class CoopGame(Game):
+    """Everyone fills the same shared grid; each letter is credited to whoever found it first."""
+    mode = "coop"
+
     def __init__(self, room_id, grid, owner):
         super().__init__(room_id, grid, owner)
         self.reset_progress()
@@ -26,7 +29,7 @@ class CoopGame(Game):
         for i in range(attempt.length):
             r = attempt.row if attempt.direction == "H" else attempt.row + i
             c = attempt.col + i if attempt.direction == "H" else attempt.col
-            if attempt.guess[i] == self.grid["solution_grid"][r][c]:
+            if attempt.guess[i] == self.grid["solution_grid"][r][c] and not self.progress[r][c]:
                 self.progress[r][c] = True
                 self.contributions[r][c] = attempt.token
         self.found_words.setdefault(attempt.token, set()).add((attempt.row, attempt.col, attempt.direction))
@@ -51,8 +54,32 @@ class CoopGame(Game):
         percent = round(100 * mine / len(cells)) if cells else 0
         return percent, len(self.found_words.get(token, ()))
     
+    def team_progress_message(self):
+        solution = self.grid["solution_grid"]
+        letters_by_player = {}
+        for row in self.contributions:
+            for token in row:
+                if token in self.players:
+                    name = self.players[token].name
+                    letters_by_player[name] = letters_by_player.get(name, 0) + 1
+        cells = [cell for row in self.progress for cell in row if cell is not None]
+        return {
+            "type": "team_progress",
+            # found letters of the shared grid, None elsewhere
+            "progress": [
+                [solution[r][c] if found else None for c, found in enumerate(row)]
+                for r, row in enumerate(self.progress)
+            ],
+            "percent": round(100 * sum(cells) / len(cells)) if cells else 0,
+            "contributions": letters_by_player,
+        }
+
+    async def broadcast_progress(self, token):
+        # Everyone, sender included, gets the shared grid and the updated contributions
+        await self.send_message_to_all(self.team_progress_message())
+
     async def send_initial_progress(self, websocket, token):
-        pass
-    
+        await websocket.send_json(self.team_progress_message())
+
     async def send_other_players_progress(self, websocket, token):
         pass

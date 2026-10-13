@@ -2,6 +2,8 @@ from .base_game import Game
 from core.player import Player
 
 class NormalGame(Game):
+    mode = "classic"
+
     def __init__(self, room_id, grid, owner):
         super().__init__(room_id, grid, owner)
         self.progress = {}
@@ -38,7 +40,7 @@ class NormalGame(Game):
         return percent, self.count_found_words(self.progress[token])
 
     def reset_progress(self):
-        for token in self.progress:
+        for token in self.players:
             self.progress[token] = self.empty_progress()
 
     async def send_initial_progress(self, websocket, token):
