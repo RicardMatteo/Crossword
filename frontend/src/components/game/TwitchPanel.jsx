@@ -34,11 +34,14 @@ export default function TwitchPanel({ twitch }) {
         <>
           <h5>{t("twitchTopViewers")}</h5>
           <ol className="twitch-list">
-            {twitch.top.map(({ name, words }) => (
+            {twitch.top.map(({ name, letters, words }) => (
               <li key={name}>
                 <span>{name}</span>
-                <span>
-                  {words} {t(words > 1 ? "wordsShort" : "wordShort")}
+                <span className="twitch-score">
+                  {letters} {t(letters > 1 ? "lettersShort" : "letterShort")}
+                  <small>
+                    {words} {t(words > 1 ? "wordsShort" : "wordShort")}
+                  </small>
                 </span>
               </li>
             ))}

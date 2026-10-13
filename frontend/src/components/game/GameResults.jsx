@@ -57,9 +57,10 @@ const GameResults = ({ ranking, duration, isCoop, playerName, isOwner, onPlayAga
         <div className="results-twitch">
           <h3>{t("twitchTopViewers")}</h3>
           <ol>
-            {twitchViewers.map(({ name, words }) => (
+            {twitchViewers.map(({ name, letters, words }) => (
               <li key={name}>
-                {name} — {words} {t(words > 1 ? "wordsShort" : "wordShort")}
+                {name} — {letters} {t(letters > 1 ? "lettersShort" : "letterShort")} ({words}{" "}
+                {t(words > 1 ? "wordsShort" : "wordShort")})
               </li>
             ))}
           </ol>

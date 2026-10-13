@@ -62,3 +62,14 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
 }
+
+.twitch-score {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.twitch-score small {
+  margin-left: 0.3em;
+  font-weight: 400;
+  color: var(--text-secondary);
+}

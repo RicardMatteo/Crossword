@@ -53,7 +53,7 @@ class Game(ABC):
         self.twitch_channel = None
         self.twitch_status = None  # "connecting", "connected" or "disconnected"
         self.twitch_feed = deque(maxlen=TWITCH_FEED_SIZE)  # last words found by viewers
-        self.twitch_viewers = {}  # viewer -> words found this round
+        self.twitch_viewers = {}  # viewer -> {"words", "letters"} found this round
 
     
     async def join(self, websocket, name, token):
@@ -115,13 +115,16 @@ class Game(ABC):
         self.twitch_status = None
         self.reset_progress()
 
-    def credit_viewer(self, viewer, word):
-        self.twitch_viewers[viewer] = self.twitch_viewers.get(viewer, 0) + 1
+    def credit_viewer(self, viewer, word, letters):
+        score = self.twitch_viewers.setdefault(viewer, {"words": 0, "letters": 0})
+        score["words"] += 1
+        score["letters"] += letters
         self.twitch_feed.appendleft({"viewer": viewer, "word": word})
 
     def top_viewers(self):
-        top = sorted(self.twitch_viewers.items(), key=lambda item: -item[1])[:TWITCH_TOP_SIZE]
-        return [{"name": name, "words": words} for name, words in top]
+        """Best viewers by letters uncovered, then by words."""
+        top = sorted(self.twitch_viewers.items(), key=lambda item: (-item[1]["letters"], -item[1]["words"]))
+        return [{"name": name, **score} for name, score in top[:TWITCH_TOP_SIZE]]
 
     def twitch_message(self):
         return {
