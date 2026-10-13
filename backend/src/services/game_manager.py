@@ -34,6 +34,14 @@ async def validate_word(attempt) -> None:
             "progress": progress
         }
     )
+    await game.on_player_progress(attempt.token)
+
+
+async def restart_room(game) -> None:
+    """Start a new round in the same room with a fresh grid."""
+    grid = await get_random_grid()
+    if grid:
+        await game.reset(normalize_grid(grid))
 
 
 async def create_room(room_id, owner, game_mode="normal", is_public=True, is_ranked=False) -> dict:
@@ -90,8 +98,14 @@ async def join_room(room_id, websocket, name, token=None) -> dict:
 
     await game.send_message_to_all(game.players_message())
 
+    # Bring a (re)joining player up to speed with the game's state
     if game.status == GameStatus.IN_PROGRESS:
-        await websocket.send_json({"type": "game_started"})
+        await websocket.send_json(game.started_message())
+        if game.end_at:
+            await websocket.send_json(game.countdown_message())
+    elif game.status == GameStatus.COMPLETED:
+        await websocket.send_json(game.started_message())
+        await websocket.send_json(game.finished_message(token))
 
     await game.send_initial_progress(websocket, token)
     await game.send_other_players_progress(websocket, token)

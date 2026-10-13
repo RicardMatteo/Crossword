@@ -40,6 +40,8 @@ async def submit_word(attempt: WordAttempt):
     game = await get_room(attempt.room_id)
     if not game:
         return JSONResponse(status_code=404, content={"error": "Room not found"})
+    if game.status != GameStatus.IN_PROGRESS or attempt.token not in game.players:
+        return {"valid": False, "error": "Game not in progress"}
     
     game_data = game.grid  
     for word in game_data["placed_words"]:

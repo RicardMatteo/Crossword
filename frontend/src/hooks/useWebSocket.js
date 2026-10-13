@@ -16,6 +16,16 @@ const useWebSocket = (roomId, playerName) => {
   const [isGameOwner, setIsGameOwner] = useState(false)
   const [players, setPlayers] = useState([])
   const [gameStarted, setGameStarted] = useState(false)
+  // { endRule, endDelay } announced by the server when the game starts
+  const [gameRules, setGameRules] = useState(null)
+  // [{ name, time }] in finishing order
+  const [finishedPlayers, setFinishedPlayers] = useState([])
+  // Timestamp (ms) at which the "delay" rule ends the game
+  const [endsAt, setEndsAt] = useState(null)
+  // { ranking, solution, found, duration } once the game is over
+  const [result, setResult] = useState(null)
+  // Incremented on each new round so the page reloads the grid
+  const [round, setRound] = useState(0)
 
   useEffect(() => {
     if (!playerName || !roomId) {
@@ -74,11 +84,27 @@ const useWebSocket = (roomId, playerName) => {
               return newProgress
             })
           } else if (msg.type === "game_finished") {
-            console.log("Game finished:", msg.stats)
-            window.dispatchEvent(new CustomEvent("gameFinished", { detail: msg.stats }))
+            setResult({ ranking: msg.ranking, solution: msg.solution, found: msg.found, duration: msg.duration })
+            setEndsAt(null)
           } else if (msg.type === "game_started") {
-            console.log("Game started")
             setGameStarted(true)
+            setGameRules({ endRule: msg.endRule, endDelay: msg.endDelay })
+            setFinishedPlayers(msg.finished || [])
+          } else if (msg.type === "player_finished") {
+            setFinishedPlayers((prev) =>
+              prev.some((p) => p.name === msg.name) ? prev : [...prev, { name: msg.name, time: msg.time }],
+            )
+          } else if (msg.type === "end_countdown") {
+            setEndsAt(Date.now() + msg.seconds * 1000)
+          } else if (msg.type === "game_reset") {
+            setGameStarted(false)
+            setGameRules(null)
+            setFinishedPlayers([])
+            setEndsAt(null)
+            setResult(null)
+            setProgress({})
+            setProgressOtherPlayers((prev) => Object.fromEntries(Object.keys(prev).map((k) => [k, {}])))
+            setRound((r) => r + 1)
           } else if (msg.type === "players") {
             console.log("Players list received:", msg.players)
             setPlayers(msg.players)
@@ -139,19 +165,38 @@ const useWebSocket = (roomId, playerName) => {
       if (wsRef.current) {
         console.log("Cleaning up WebSocket connection")
         wsRef.current.onclose = null
+        wsRef.current.onerror = null
         wsRef.current.close(1000, "Cleaning up")
       }
       wsRef.current = null
     }
   }, [roomId, playerName])
 
-  const startGame = () => {
+  const send = (message) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: "start_game" }))
+      wsRef.current.send(JSON.stringify(message))
     }
   }
 
-  return { token, progressOtherPlayers, progress, isGameOwner, players, gameStarted, startGame }
+  // settings: { endRule: "first" | "all" | "delay", endDelay: seconds }
+  const startGame = (settings = {}) => send({ type: "start_game", ...settings })
+  const restartGame = () => send({ type: "restart_game" })
+
+  return {
+    token,
+    progressOtherPlayers,
+    progress,
+    isGameOwner,
+    players,
+    gameStarted,
+    gameRules,
+    finishedPlayers,
+    endsAt,
+    result,
+    round,
+    startGame,
+    restartGame,
+  }
 }
 
 export default useWebSocket

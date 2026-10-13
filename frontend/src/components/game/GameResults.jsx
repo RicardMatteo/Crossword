@@ -1,0 +1,70 @@
+"use client"
+
+import { useLanguage } from "../../contexts/LanguageContext"
+import "./GameResults.css"
+
+export const formatTime = (seconds) => {
+  const s = Math.round(seconds)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
+}
+
+/**
+ * End-of-game ranking, shown above the revealed solution grid
+ */
+const GameResults = ({ ranking, playerName, isOwner, onPlayAgain, onLeave }) => {
+  const { t } = useLanguage()
+  const winner = ranking[0]
+
+  return (
+    <section className="game-results">
+      <h2>{t("gameFinished")}</h2>
+      {winner && (
+        <p className="results-winner">
+          {winner.name === playerName ? t("youWin") : t("winnerIs").replace("{name}", winner.name)}
+        </p>
+      )}
+
+      <table className="results-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{t("player")}</th>
+            <th>{t("time")}</th>
+            <th>{t("completion")}</th>
+            <th>{t("words")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ranking.map((row, index) => (
+            <tr key={row.name} className={row.name === playerName ? "is-me" : ""}>
+              <td>{index + 1}</td>
+              <td>{row.name}</td>
+              <td>{row.finished ? formatTime(row.time) : t("notFinished")}</td>
+              <td>{row.percent}%</td>
+              <td>
+                {row.wordsFound}/{row.totalWords}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="results-actions">
+        {isOwner ? (
+          <button className="btn btn-primary" onClick={onPlayAgain}>
+            {t("playAgain")}
+          </button>
+        ) : (
+          <span className="results-waiting">{t("waitingForOwnerRestart")}</span>
+        )}
+        <button className="btn btn-secondary" onClick={onLeave}>
+          {t("backToHome")}
+        </button>
+      </div>
+
+      <p className="results-legend">{t("solutionLegend")}</p>
+    </section>
+  )
+}
+
+export default GameResults

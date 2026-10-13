@@ -6,15 +6,16 @@ class NormalGame(Game):
         super().__init__(room_id, grid, owner)
         self.progress = {}
 
+    def empty_progress(self):
+        return [[False if c == '-' else None for c in row] for row in self.grid["grid_structure"]]
+
     async def join(self, websocket, name, token):
         if token not in self.players:
             self.players[token] = Player(token, name, websocket)
         else:
             self.players[token].name = name
             self.players[token].reconnect(websocket)
-        self.progress[token] = [
-            [False if c == '-' else None for c in row] for row in self.grid["grid_structure"]
-        ]
+        self.progress[token] = self.empty_progress()
         await super().join(websocket, name, token)
         return token
 
@@ -24,18 +25,21 @@ class NormalGame(Game):
             c = attempt.col + i if attempt.direction == "H" else attempt.col
             if attempt.guess[i] == self.grid["solution_grid"][r][c]:
                 self.progress[attempt.token][r][c] = True
-        self.check_endgame()
 
     def get_progress_for(self, token):
         return self.progress[token]
 
-    def check_endgame(self):
-        for grid in self.progress.values():
-            for row in grid:
-                if False in row:
-                    return False
-        self.is_finished = True
-        return True
+    def is_player_done(self, token):
+        return not any(False in row for row in self.progress[token])
+
+    def player_stats(self, token):
+        cells = [cell for row in self.progress[token] for cell in row if cell is not None]
+        percent = round(100 * sum(cells) / len(cells)) if cells else 0
+        return percent, self.count_found_words(self.progress[token])
+
+    def reset_progress(self):
+        for token in self.progress:
+            self.progress[token] = self.empty_progress()
 
     async def send_initial_progress(self, websocket, token):
         initial_progress = [

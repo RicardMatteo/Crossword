@@ -87,7 +87,9 @@ function ClueCell({ clues, definitionMap }) {
  * Input cell component for crossword letters
  * Handles user input, focus states, and directional arrows
  */
-function InputCell({ cell, rowIndex, colIndex, inputRefs, handleKeyDown, onFocus, isInWord, isFocused, arrow }) {
+const statusColors = { found: "var(--success-color)", missed: "var(--danger-color)" }
+
+function InputCell({ cell, rowIndex, colIndex, inputRefs, handleKeyDown, onFocus, isInWord, isFocused, arrow, status }) {
   return (
     <div className="cell-container">
       <input
@@ -95,6 +97,7 @@ function InputCell({ cell, rowIndex, colIndex, inputRefs, handleKeyDown, onFocus
         type="text"
         maxLength={1}
         value={cell || ""}
+        readOnly={status !== undefined}
         ref={inputRefs.current[rowIndex][colIndex]}
         onChange={(e) => {
           if (navigator.userAgent.toLowerCase().includes("mobile")) {
@@ -115,7 +118,7 @@ function InputCell({ cell, rowIndex, colIndex, inputRefs, handleKeyDown, onFocus
           caretColor: "transparent",
           outline: "none",
           gridArea: "1/1",
-          color: "var(--text-primary)",
+          color: statusColors[status] || "var(--text-primary)",
           border: "0.2px solid var(--border-color)",
           opacity: isInWord ? (isFocused ? 1 : 0.8) : 1,
         }}
@@ -142,6 +145,7 @@ export default function CrosswordGridDisplay({
   isInFocusedWord,
   definitionMap,
   arrowMap,
+  cellStatus, // optional grid of "found" / "missed": shows a revealed, read-only grid
 }) {
   return (
     <div lang="fr" className="crossword-grid">
@@ -149,7 +153,7 @@ export default function CrosswordGridDisplay({
         <div key={rowIndex} className="crossword-row">
           {row.map((cell, colIndex) => {
             const isFocused = focusedCell.row === rowIndex && focusedCell.col === colIndex
-            const isInWord = isInFocusedWord(rowIndex, colIndex)
+            const isInWord = !cellStatus && isInFocusedWord(rowIndex, colIndex)
 
             if (cell !== null) {
               return (
@@ -164,6 +168,7 @@ export default function CrosswordGridDisplay({
                   isInWord={isInWord}
                   isFocused={isFocused}
                   arrow={arrowMap[rowIndex][colIndex]}
+                  status={cellStatus?.[rowIndex]?.[colIndex] ?? undefined}
                 />
               )
             } else {

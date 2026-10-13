@@ -17,7 +17,15 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players 
     ranked: false,
     maxPlayers: 4,
     difficulty: "medium",
+    endRule: "first",
+    endDelay: 60,
   })
+
+  const endRules = [
+    { value: "first", label: t("endRuleFirst") },
+    { value: "all", label: t("endRuleAll") },
+    { value: "delay", label: t("endRuleDelay") },
+  ]
 
   const gameModes = [
     { value: "classic", label: "Classic" },
@@ -108,6 +116,36 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players 
               </div>
 
               <div className="setting-group">
+                <label>{t("endRule")}</label>
+                <select
+                  value={gameSettings.endRule}
+                  onChange={(e) => handleSettingChange("endRule", e.target.value)}
+                  className="setting-select"
+                >
+                  {endRules.map((rule) => (
+                    <option key={rule.value} value={rule.value}>
+                      {rule.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {gameSettings.endRule === "delay" && (
+                <div className="setting-group">
+                  <label>{t("endDelaySeconds")}</label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="600"
+                    step="5"
+                    value={gameSettings.endDelay}
+                    onChange={(e) => handleSettingChange("endDelay", Number.parseInt(e.target.value) || 60)}
+                    className="setting-input"
+                  />
+                </div>
+              )}
+
+              <div className="setting-group">
                 <label>Difficulty</label>
                 <select
                   value={gameSettings.difficulty}
@@ -153,7 +191,7 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players 
           {isOwner ? (
             <button
               className={`btn btn-primary btn-large ${!canStartGame ? "disabled" : ""}`}
-              onClick={onStartGame}
+              onClick={() => onStartGame({ endRule: gameSettings.endRule, endDelay: gameSettings.endDelay })}
               disabled={!canStartGame}
             >
               {canStartGame ? t("startGame") : t("waitingForPlayers")}

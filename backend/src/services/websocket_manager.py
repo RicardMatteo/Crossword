@@ -1,5 +1,5 @@
 from fastapi import WebSocket, WebSocketDisconnect
-from services.game_manager import join_room
+from services.game_manager import join_room, restart_room
 from utils.game_status import GameStatus
 
 async def handle_websocket(websocket: WebSocket, room_id: str):
@@ -28,11 +28,11 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
             if msg_type == "request_players":
                 await websocket.send_json(game.players_message())
             elif msg_type == "start_game":
-                if token != game.owner:
-                    continue
-                if game.status == GameStatus.WAITING_FOR_PLAYERS:
-                    game.status = GameStatus.IN_PROGRESS
-                    await game.send_message_to_all({"type": "game_started"})
+                if token == game.owner:
+                    await game.start(msg.get("endRule"), msg.get("endDelay"))
+            elif msg_type == "restart_game":
+                if token == game.owner and game.status == GameStatus.COMPLETED:
+                    await restart_room(game)
 
     except WebSocketDisconnect:
         player = game.players.get(token)

@@ -13,7 +13,7 @@ import SEO from "../components/SEO"
 import LoadingSpinner from "../components/ui/LoadingSpinner"
 import "./GamePage.css"
 import GameLobby from "../components/game/GameLobby"
-import GameEndModal from "../components/game/GameEndModal"
+import GameResults, { formatTime } from "../components/game/GameResults"
 
 /**
  * Main game page component that handles crossword gameplay
@@ -38,24 +38,45 @@ export default function GamePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Add new state variables after existing state:
-  const [gamePhase, setGamePhase] = useState("lobby") // "lobby", "playing", "finished"
-  const [gameEndStats, setGameEndStats] = useState(null)
-
   // Player state
   const [playerName, setPlayerName] = useState(getCurrentPlayerName())
   const [showNameInput, setShowNameInput] = useState(!getCurrentPlayerName())
 
   // WebSocket connection
-  const { token, progressOtherPlayers, progress, isGameOwner, players, gameStarted, startGame } = useWebSocket(
+  const {
+    token,
+    progressOtherPlayers,
+    progress,
+    isGameOwner,
+    players,
+    gameStarted,
+    gameRules,
+    finishedPlayers,
+    endsAt,
+    result,
+    round,
+    startGame,
+    restartGame,
+  } = useWebSocket(
     roomId,
     showNameInput ? null : playerName, // only connect once the name is confirmed
   )
 
-  // The server decides when the game starts (owner click, or joining a running game)
+  // The server drives the phase: lobby -> playing (owner starts) -> finished (end rule met)
+  const gamePhase = result ? "finished" : gameStarted ? "playing" : "lobby"
+
+  // Seconds left before the "delay" rule ends the game
+  const [secondsLeft, setSecondsLeft] = useState(null)
   useEffect(() => {
-    if (gameStarted && gamePhase === "lobby") setGamePhase("playing")
-  }, [gameStarted, gamePhase])
+    if (!endsAt) {
+      setSecondsLeft(null)
+      return
+    }
+    const tick = () => setSecondsLeft(Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)))
+    tick()
+    const id = setInterval(tick, 250)
+    return () => clearInterval(id)
+  }, [endsAt])
 
   // Load grid data on component mount
   useEffect(() => {
@@ -134,7 +155,7 @@ export default function GamePage() {
     if (roomId) {
       loadGrid()
     }
-  }, [roomId, token])
+  }, [roomId, token, round])
 
   // Apply progress from WebSocket
   useEffect(() => {
@@ -368,9 +389,8 @@ export default function GamePage() {
     setShowNameInput(false)
   }
 
-  // Add handler functions:
-  const handleStartGame = () => {
-    startGame()
+  const handleStartGame = (settings) => {
+    startGame(settings)
   }
 
   const handleLeaveGame = () => {
@@ -378,8 +398,25 @@ export default function GamePage() {
   }
 
   const handlePlayAgain = () => {
-    setGamePhase("lobby")
-    setGameEndStats(null)
+    restartGame()
+  }
+
+  // Revealed grid once the game is over: solution letters, coloured by what this player found
+  const revealedGrid = result && inputGrid.map((row, r) => row.map((cell, c) => (cell === null ? null : result.solution[r][c])))
+  const cellStatus =
+    result &&
+    inputGrid.map((row, r) =>
+      row.map((cell, c) => (cell === null ? null : result.found?.[r]?.[c] ? "found" : "missed")),
+    )
+
+  const iFinished = finishedPlayers.some((p) => p.name === playerName)
+  const statusMessages = []
+  if (gamePhase === "playing") {
+    finishedPlayers
+      .filter((p) => p.name !== playerName)
+      .forEach((p) => statusMessages.push(t("playerFinished").replace("{name}", p.name).replace("{time}", formatTime(p.time))))
+    if (iFinished) statusMessages.push(t("youFinished"))
+    if (secondsLeft !== null) statusMessages.push(t("endsIn").replace("{s}", secondsLeft))
   }
 
   // Update the return statement to conditionally render based on gamePhase:
@@ -438,6 +475,16 @@ export default function GamePage() {
       />
 
       <div className="game-page">
+        {gamePhase === "finished" && (
+          <GameResults
+            ranking={result.ranking}
+            playerName={playerName}
+            isOwner={isGameOwner}
+            onPlayAgain={handlePlayAgain}
+            onLeave={handleLeaveGame}
+          />
+        )}
+
         <div className="game-header">
           <div className="game-info">
             <h1 className="game-title">
@@ -482,11 +529,22 @@ export default function GamePage() {
           </div>
         </div>
 
+        {gamePhase === "playing" && gameRules && (
+          <div className="game-status">
+            <span className="game-rule">{t(`endRuleInfo_${gameRules.endRule}`).replace("{s}", gameRules.endDelay)}</span>
+            {statusMessages.map((message) => (
+              <strong key={message}>{message}</strong>
+            ))}
+          </div>
+        )}
+
         <div className="game-content">
           <div className="crossword-section">
             <CrosswordGridDisplay
+              key={round} // fresh inputs each round (frozen letters are set on the DOM)
               gridStructure={inputGrid}
-              inputGrid={inputGrid}
+              inputGrid={revealedGrid || inputGrid}
+              cellStatus={cellStatus}
               gridClueOrder={gridClueOrder}
               inputRefs={inputRefs}
               focusedCell={focusedCell}
@@ -503,9 +561,6 @@ export default function GamePage() {
           </div>
         </div>
       </div>
-      {gamePhase === "finished" && (
-        <GameEndModal isOpen={true} gameStats={gameEndStats} onPlayAgain={handlePlayAgain} onClose={handleLeaveGame} />
-      )}
     </>
   )
 }
