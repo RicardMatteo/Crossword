@@ -21,7 +21,8 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: 5173,
       allowedHosts: [
-        'localhost'
+        'localhost',
+        'fedora-m.local', // this PC on the local network (mDNS), e.g. for OBS on another computer
       ],
       proxy: {
         '/api': {

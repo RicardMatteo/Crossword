@@ -168,11 +168,6 @@ const translations = {
     noAccount: "Vous n'avez pas de compte ?",
 
     // Profile
-    gamesPlayed: "Parties Jouées",
-    gamesWon: "Parties Gagnées",
-    winRate: "Taux de Victoire",
-    averageTime: "Temps Moyen",
-    bestTime: "Meilleur Temps",
     wordsGuessed: "Mots Trouvés",
 
     // 404
@@ -341,11 +336,6 @@ const translations = {
     noAccount: "Don't have an account?",
 
     // Profile
-    gamesPlayed: "Games Played",
-    gamesWon: "Games Won",
-    winRate: "Win Rate",
-    averageTime: "Average Time",
-    bestTime: "Best Time",
     wordsGuessed: "Words Guessed",
 
     // 404
@@ -513,11 +503,6 @@ const translations = {
     noAccount: "¿No tienes una cuenta?",
 
     // Profile
-    gamesPlayed: "Juegos Jugados",
-    gamesWon: "Juegos Ganados",
-    winRate: "Tasa de Victoria",
-    averageTime: "Tiempo Promedio",
-    bestTime: "Mejor Tiempo",
     wordsGuessed: "Palabras Adivinadas",
 
     // 404
@@ -685,11 +670,6 @@ const translations = {
     noAccount: "Noch kein Konto?",
 
     // Profile
-    gamesPlayed: "Gespielte Spiele",
-    gamesWon: "Gewonnene Spiele",
-    winRate: "Gewinnrate",
-    averageTime: "Durchschnittszeit",
-    bestTime: "Beste Zeit",
     wordsGuessed: "Erratene Wörter",
 
     // 404
