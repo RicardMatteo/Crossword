@@ -31,6 +31,8 @@ const useWebSocket = (roomId, playerName) => {
   const [joinError, setJoinError] = useState(null)
   // Coop only: { percent, contributions: { name: letters } } of the shared grid
   const [teamProgress, setTeamProgress] = useState(null)
+  // Twitch plays: { channel, status, feed: [{ viewer, word }], top: [{ name, words }], error }
+  const [twitch, setTwitch] = useState(null)
   // Incremented on each new round so the page reloads the grid
   const [round, setRound] = useState(0)
 
@@ -83,6 +85,9 @@ const useWebSocket = (roomId, playerName) => {
           } else if (msg.type === "settings") {
             const { type, ...rest } = msg
             setSettings(rest)
+          } else if (msg.type === "twitch") {
+            const { type, ...rest } = msg
+            setTwitch(rest.channel || rest.error ? rest : null)
           } else if (msg.type === "team_progress") {
             // Coop: the shared grid's found letters, applied like our own progress
             setProgress(msg.progress)
@@ -100,7 +105,13 @@ const useWebSocket = (roomId, playerName) => {
               return newProgress
             })
           } else if (msg.type === "game_finished") {
-            setResult({ ranking: msg.ranking, solution: msg.solution, found: msg.found, duration: msg.duration })
+            setResult({
+              ranking: msg.ranking,
+              solution: msg.solution,
+              found: msg.found,
+              duration: msg.duration,
+              twitchViewers: msg.twitchViewers,
+            })
             setEndsAt(null)
           } else if (msg.type === "game_started") {
             setGameStarted(true)
@@ -201,6 +212,8 @@ const useWebSocket = (roomId, playerName) => {
 
   // Owner only: the server validates, stores and broadcasts the new settings
   const updateSettings = (changes) => send({ type: "update_settings", settings: changes })
+  // Owner, in the lobby: let a Twitch channel's chat play (null unlinks)
+  const linkTwitch = (channel) => send({ type: "link_twitch", channel })
   const startGame = () => send({ type: "start_game" })
   const restartGame = () => send({ type: "restart_game" })
 
@@ -219,6 +232,8 @@ const useWebSocket = (roomId, playerName) => {
     settings,
     joinError,
     round,
+    twitch,
+    linkTwitch,
     updateSettings,
     startGame,
     restartGame,

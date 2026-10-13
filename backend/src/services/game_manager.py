@@ -1,6 +1,10 @@
 from crud.game_crud import get_random_grid
 from crud.user_crud import name_taken
+from services.twitch_chat import TwitchChat
 from utils.normalize import normalize_grid
+from types import SimpleNamespace
+import re
+import unicodedata
 import uuid
 
 from core.game_modes.normal_game import NormalGame
@@ -22,6 +26,10 @@ async def validate_word(attempt) -> None:
         print(f"Room not found for room_id {attempt.room_id}")
         return
 
+    await apply_word(game, attempt)
+
+
+async def apply_word(game, attempt) -> None:
     await game.validate_word(attempt)
     await game.broadcast_progress(attempt.token)
     await game.on_player_progress(attempt.token)
@@ -129,8 +137,13 @@ async def join_room(room_id, websocket, name, token=None, user=None) -> dict:
     if owner is None or not owner.is_connected:
         game.owner = token
 
+    if game.twitch_channel and room_id not in TWITCH_CHATS:
+        start_twitch(game)
+
     await game.send_message_to_all(game.players_message())
     await websocket.send_json(game.settings_message())
+    if game.twitch_channel:
+        await websocket.send_json(game.twitch_message())
 
     # Bring a (re)joining player up to speed with the game's state
     if game.status == GameStatus.IN_PROGRESS:
@@ -145,3 +158,84 @@ async def join_room(room_id, websocket, name, token=None, user=None) -> dict:
     await game.send_other_players_progress(websocket, token)
 
     return {"message": "Joined room successfully", "token": token, "room": game}
+
+# --- Twitch plays -----------------------------------------------------------
+
+TWITCH_CHATS = {}  # room_id -> TwitchChat reading the room's linked channel
+TWITCH_CHANNEL_RE = re.compile(r"^[a-z0-9_]{3,25}$")
+
+
+def chat_guesses(text):
+    """Words a chat message may be proposing: each word, plus all of them glued
+    together (answers like "ILYA" may be typed "il y a"). Accents are dropped."""
+    plain = unicodedata.normalize("NFD", text.upper())
+    plain = "".join(c for c in plain if not unicodedata.combining(c))
+    words = re.findall(r"[A-Z]+", plain)
+    guesses = {w for w in words if len(w) >= 2}
+    if len(words) > 1:
+        guesses.add("".join(words))
+    return guesses
+
+
+async def on_twitch_message(room_id, viewer, text):
+    """A viewer's message fills every word of the grid it names, wherever it is."""
+    game = GAMES.get(room_id)
+    if not game or game.status != GameStatus.IN_PROGRESS or game.twitch_token not in game.players:
+        return
+    token = game.twitch_token
+    for guess in chat_guesses(text):
+        for word in game.grid["placed_words"]:
+            if word["word"] != guess or game.is_word_found(token, word):
+                continue
+            await apply_word(game, SimpleNamespace(
+                room_id=room_id, token=token, guess=guess, length=word["length"],
+                row=word["row"], col=word["col"], direction=word["direction"],
+            ))
+            game.credit_viewer(viewer, guess)
+            await game.send_message_to_all(game.twitch_message())
+            if game.status != GameStatus.IN_PROGRESS:  # that word ended the game
+                return
+            break  # one occurrence per guess
+
+
+async def on_twitch_status(room_id, status):
+    game = GAMES.get(room_id)
+    if game and game.twitch_channel:
+        game.twitch_status = status
+        await game.send_message_to_all(game.twitch_message())
+
+
+def start_twitch(game):
+    room_id = game.room_id
+    stop_twitch(room_id)
+    chat = TwitchChat(
+        game.twitch_channel,
+        on_message=lambda viewer, text: on_twitch_message(room_id, viewer, text),
+        on_status=lambda status: on_twitch_status(room_id, status),
+    )
+    TWITCH_CHATS[room_id] = chat
+    chat.start()
+
+
+def stop_twitch(room_id):
+    chat = TWITCH_CHATS.pop(room_id, None)
+    if chat:
+        chat.stop()
+
+
+async def link_twitch(game, channel) -> None:
+    """Owner, in the lobby: let `channel`'s chat play in the room (None unlinks)."""
+    if game.status != GameStatus.WAITING_FOR_PLAYERS:
+        return
+    channel = (channel or "").strip().lstrip("#").lower()
+    if channel and not TWITCH_CHANNEL_RE.match(channel):
+        await game.send_message_to_all({"type": "twitch", "error": "invalid_channel", **game.twitch_message()})
+        return
+    if channel:
+        game.add_twitch_player(channel)
+        start_twitch(game)
+    else:
+        stop_twitch(game.room_id)
+        game.remove_twitch_player()
+    await game.send_message_to_all(game.players_message())
+    await game.send_message_to_all(game.twitch_message())

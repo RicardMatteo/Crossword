@@ -5,6 +5,8 @@ services:
       - crossword-db
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@crossword-db:5432/${POSTGRES_DB}
+      # Twitch chat (read anonymously); overridable to test against a fake IRC server
+      - TWITCH_IRC_URL=${TWITCH_IRC_URL:-wss://irc-ws.chat.twitch.tv:443}
     ports:
       - 8000:8000
     # Mount source for development so backend code changes are picked up

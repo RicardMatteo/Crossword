@@ -40,8 +40,7 @@ class NormalGame(Game):
         return percent, self.count_found_words(self.progress[token])
 
     def reset_progress(self):
-        for token in self.players:
-            self.progress[token] = self.empty_progress()
+        self.progress = {token: self.empty_progress() for token in self.players}
 
     async def send_initial_progress(self, websocket, token):
         initial_progress = [

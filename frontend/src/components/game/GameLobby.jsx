@@ -1,6 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { useLanguage } from "../../contexts/LanguageContext"
+import TwitchStatus from "./TwitchStatus"
 import "./GameLobby.css"
 
 const END_DELAYS = [15, 30, 60, 90, 120, 180, 300]
@@ -10,8 +12,21 @@ const MAX_PLAYERS = [2, 3, 4, 5, 6, 7, 8]
  * Game lobby: players wait while the owner edits the settings.
  * Settings live on the server; everyone sees them, only the owner can change them.
  */
-const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players, settings, onChangeSettings }) => {
+const GameLobby = ({
+  roomId,
+  onStartGame,
+  onLeaveGame,
+  isOwner = false,
+  players,
+  settings,
+  onChangeSettings,
+  twitch,
+  onLinkTwitch,
+}) => {
   const { t } = useLanguage()
+  const [channelInput, setChannelInput] = useState("")
+  // The Twitch chat is listed with the players but takes no seat
+  const humanCount = players.filter((p) => !p.isTwitch).length
 
   const gameModes = [
     { value: "classic", label: t("modeClassic") },
@@ -53,12 +68,12 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players,
       <div className="lobby-content">
         <div className="players-section">
           <h3>
-            {t("playersInLobby")} ({players.length}
+            {t("playersInLobby")} ({humanCount}
             {settings && `/${settings.maxPlayers}`})
           </h3>
           <div className="players-list">
             {players.map((player) => (
-              <div key={player.name} className="player-card">
+              <div key={player.name} className={`player-card ${player.isTwitch ? "is-twitch" : ""}`}>
                 <div className="player-info">
                   <span className="player-name">{player.name}</span>
                   {player.isOwner && <span className="owner-badge">👑</span>}
@@ -112,13 +127,51 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players,
                 <label>{t("maxPlayers")}</label>
                 {select(
                   "maxPlayers",
-                  MAX_PLAYERS.filter((n) => n >= players.length).map((n) => ({ value: n, label: String(n) })),
+                  MAX_PLAYERS.filter((n) => n >= humanCount).map((n) => ({ value: n, label: String(n) })),
                   Number,
                 )}
               </div>
             </div>
           )}
           {settings && !settings.isPublic && <p className="setting-hint">{t("privateHint")}</p>}
+        </div>
+
+        <div className="twitch-section">
+          <h3>{t("twitchPlays")}</h3>
+          <p className="setting-hint">{t("twitchHint")}</p>
+          {twitch?.channel ? (
+            <div className="twitch-linked">
+              <span className="twitch-channel">twitch.tv/{twitch.channel}</span>
+              <TwitchStatus status={twitch.status} />
+              {isOwner && (
+                <button className="btn btn-secondary" onClick={() => onLinkTwitch(null)}>
+                  {t("twitchUnlink")}
+                </button>
+              )}
+            </div>
+          ) : isOwner ? (
+            <form
+              className="twitch-form"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (channelInput.trim()) onLinkTwitch(channelInput.trim())
+              }}
+            >
+              <input
+                className="setting-input"
+                placeholder={t("twitchChannel")}
+                value={channelInput}
+                maxLength={40}
+                onChange={(e) => setChannelInput(e.target.value)}
+              />
+              <button className="btn btn-primary" type="submit" disabled={!channelInput.trim()}>
+                {t("twitchLink")}
+              </button>
+            </form>
+          ) : (
+            <p className="setting-hint">{t("twitchNotLinked")}</p>
+          )}
+          {twitch?.error === "invalid_channel" && isOwner && <p className="twitch-error">{t("twitchInvalidChannel")}</p>}
         </div>
 
         <div className="lobby-actions">

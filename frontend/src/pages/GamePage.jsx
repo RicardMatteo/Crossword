@@ -15,6 +15,7 @@ import LoadingSpinner from "../components/ui/LoadingSpinner"
 import "./GamePage.css"
 import GameLobby from "../components/game/GameLobby"
 import GameResults, { formatTime } from "../components/game/GameResults"
+import TwitchPanel from "../components/game/TwitchPanel"
 
 /**
  * Main game page component that handles crossword gameplay
@@ -62,6 +63,8 @@ export default function GamePage() {
     settings,
     joinError,
     round,
+    twitch,
+    linkTwitch,
     updateSettings,
     startGame,
     restartGame,
@@ -489,6 +492,8 @@ export default function GamePage() {
         players={players}
         settings={settings}
         onChangeSettings={updateSettings}
+        twitch={twitch}
+        onLinkTwitch={linkTwitch}
       />
     )
   }
@@ -522,6 +527,7 @@ export default function GamePage() {
           <GameResults
             ranking={result.ranking}
             duration={result.duration}
+            twitchViewers={result.twitchViewers}
             isCoop={isCoop}
             playerName={playerName}
             isOwner={isGameOwner}
@@ -582,6 +588,7 @@ export default function GamePage() {
           </div>
 
           <div className="progress-section">
+            {twitch?.channel && <TwitchPanel twitch={twitch} />}
             {isCoop ? (
               <TeamProgress teamProgress={teamProgress} players={players} playerName={playerName} />
             ) : (

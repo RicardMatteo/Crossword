@@ -11,7 +11,7 @@ export const formatTime = (seconds) => {
 /**
  * End-of-game ranking, shown above the revealed solution grid
  */
-const GameResults = ({ ranking, duration, isCoop, playerName, isOwner, onPlayAgain, onLeave }) => {
+const GameResults = ({ ranking, duration, isCoop, playerName, isOwner, onPlayAgain, onLeave, twitchViewers }) => {
   const { t } = useLanguage()
   const winner = ranking[0]
 
@@ -52,6 +52,19 @@ const GameResults = ({ ranking, duration, isCoop, playerName, isOwner, onPlayAga
           ))}
         </tbody>
       </table>
+
+      {twitchViewers?.length > 0 && (
+        <div className="results-twitch">
+          <h3>{t("twitchTopViewers")}</h3>
+          <ol>
+            {twitchViewers.map(({ name, words }) => (
+              <li key={name}>
+                {name} — {words} {t(words > 1 ? "wordsShort" : "wordShort")}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       <div className="results-actions">
         {isOwner ? (

@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 import asyncio
 import time
+from collections import deque
+
+from core.player import Player
 
 from crud import stats_crud
 from utils.game_status import GameStatus
@@ -15,6 +18,8 @@ MAX_END_DELAY = 600
 GAME_MODES = ("classic", "coop")
 DEFAULT_MAX_PLAYERS = 4
 MAX_PLAYERS_LIMIT = 8
+TWITCH_FEED_SIZE = 8
+TWITCH_TOP_SIZE = 10
 
 class Game(ABC):
     mode = None  # "classic" or "coop", set by subclasses
@@ -44,6 +49,12 @@ class Game(ABC):
         self.results = None
         self.ranked_tokens = []  # tokens in ranking order, kept server-side (tokens are secrets)
 
+        # Twitch plays: a linked channel's chat plays as one virtual player
+        self.twitch_channel = None
+        self.twitch_status = None  # "connecting", "connected" or "disconnected"
+        self.twitch_feed = deque(maxlen=TWITCH_FEED_SIZE)  # last words found by viewers
+        self.twitch_viewers = {}  # viewer -> words found this round
+
     
     async def join(self, websocket, name, token):
         pass
@@ -57,7 +68,7 @@ class Game(ABC):
         return {
             "type": "players",
             "players": [
-                {"name": player.name, "isOwner": token == self.owner}
+                {"name": player.name, "isOwner": token == self.owner, "isTwitch": player.is_twitch}
                 for token, player in self.players.items()
                 if player.is_connected
             ],
@@ -66,7 +77,7 @@ class Game(ABC):
     async def on_player_left(self, token):
         """Hand ownership to another connected player and notify the room."""
         if token == self.owner:
-            connected = [t for t, p in self.players.items() if p.is_connected]
+            connected = self.connected_humans()
             if connected:
                 self.owner = connected[0]
         await self.send_message_to_all({
@@ -77,8 +88,49 @@ class Game(ABC):
         # With the "all" rule, a player leaving may be the last one we were waiting for
         await self.check_end()
 
+    def connected_humans(self):
+        """Tokens of the connected real players (the Twitch chat is not one)."""
+        return [t for t, p in self.players.items() if p.is_connected and not p.is_twitch]
+
     def connected_count(self):
-        return sum(player.is_connected for player in self.players.values())
+        return len(self.connected_humans())
+
+    @property
+    def twitch_token(self):
+        return f"{self.room_id}-twitch"
+
+    def add_twitch_player(self, channel):
+        """Add the virtual player of `channel`'s chat (lobby only)."""
+        self.remove_twitch_player()
+        player = Player(self.twitch_token, f"📺 {channel}")
+        player.is_twitch = True
+        self.players[self.twitch_token] = player
+        self.twitch_channel = channel
+        self.twitch_status = "connecting"
+        self.reset_progress()
+
+    def remove_twitch_player(self):
+        self.players.pop(self.twitch_token, None)
+        self.twitch_channel = None
+        self.twitch_status = None
+        self.reset_progress()
+
+    def credit_viewer(self, viewer, word):
+        self.twitch_viewers[viewer] = self.twitch_viewers.get(viewer, 0) + 1
+        self.twitch_feed.appendleft({"viewer": viewer, "word": word})
+
+    def top_viewers(self):
+        top = sorted(self.twitch_viewers.items(), key=lambda item: -item[1])[:TWITCH_TOP_SIZE]
+        return [{"name": name, "words": words} for name, words in top]
+
+    def twitch_message(self):
+        return {
+            "type": "twitch",
+            "channel": self.twitch_channel,
+            "status": self.twitch_status,
+            "feed": list(self.twitch_feed),
+            "top": self.top_viewers(),
+        }
 
     def is_full(self):
         return self.connected_count() >= self.max_players
@@ -94,7 +146,8 @@ class Game(ABC):
         }
 
     def copy_settings_from(self, other):
-        for attr in ("is_public", "max_players", "next_mode", "end_rule", "end_delay"):
+        for attr in ("is_public", "max_players", "next_mode", "end_rule", "end_delay",
+                     "twitch_channel", "twitch_status", "twitch_feed", "twitch_viewers"):
             setattr(self, attr, getattr(other, attr))
 
     async def update_settings(self, settings):
@@ -168,7 +221,8 @@ class Game(ABC):
     async def check_end(self):
         if self.status != GameStatus.IN_PROGRESS or not self.finish_times:
             return
-        connected = [t for t, p in self.players.items() if p.is_connected]
+        # The Twitch chat may never finish: only real players are waited for
+        connected = self.connected_humans()
         all_done = all(t in self.finish_times for t in connected)
 
         if self.end_rule == "first" or all_done:
@@ -252,6 +306,7 @@ class Game(ABC):
             "solution": self.grid["solution_grid"],
             "found": self.get_progress_for(token),  # True = found, False = missed, None = clue cell
             "duration": self.elapsed(),
+            "twitchViewers": self.top_viewers() if self.twitch_channel else None,
         }
 
     async def reset(self, grid):
@@ -266,15 +321,25 @@ class Game(ABC):
         self.finish_times = {}
         self.results = None
         self.ranked_tokens = []
+        self.twitch_feed.clear()
+        self.twitch_viewers = {}
         self.reset_progress()
         await self.send_message_to_all({"type": "game_reset"})
+        if self.twitch_channel:
+            await self.send_message_to_all(self.twitch_message())
+
+    def is_word_found(self, token, word):
+        progress = self.get_progress_for(token)
+        return all(progress[r][c] for r, c in self.word_cells(word))
+
+    @staticmethod
+    def word_cells(word):
+        for i in range(word["length"]):
+            yield (word["row"], word["col"] + i) if word["direction"] == "H" else (word["row"] + i, word["col"])
 
     def count_found_words(self, progress):
         """Words whose letters are all found in a progress grid (True = found)."""
-        def cells(word):
-            for i in range(word["length"]):
-                yield (word["row"], word["col"] + i) if word["direction"] == "H" else (word["row"] + i, word["col"])
-        return sum(all(progress[r][c] for r, c in cells(word)) for word in self.grid["placed_words"])
+        return sum(all(progress[r][c] for r, c in self.word_cells(word)) for word in self.grid["placed_words"])
 
     @abstractmethod
     def is_player_done(self, token):

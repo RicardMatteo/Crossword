@@ -114,6 +114,49 @@
 
 
 
+.twitch-section {
+  grid-column: 1 / -1;
+  background: var(--bg-primary);
+  padding: 1.5rem 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  border-left: 4px solid #9146ff;
+}
+
+.twitch-section h3 {
+  margin: 0 0 0.5rem;
+  color: var(--text-primary);
+  font-size: 1.3rem;
+}
+
+.twitch-form,
+.twitch-linked {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.twitch-form .setting-input {
+  flex: 1;
+  min-width: 180px;
+}
+
+.twitch-channel {
+  font-weight: 600;
+  color: #9146ff;
+}
+
+.twitch-error {
+  color: var(--danger-color);
+  margin: 0.5rem 0 0;
+}
+
+.player-card.is-twitch {
+  border-color: #9146ff;
+}
+
 .lobby-actions {
   grid-column: 1 / -1;
   display: flex;

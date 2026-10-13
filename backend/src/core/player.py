@@ -7,6 +7,7 @@ class Player:
         self.progress = None
         self.is_finished = False
         self.user_id = None  # set when the player is logged in: their results are saved
+        self.is_twitch = False  # the virtual player fed by a linked Twitch chat
 
     def set_progress(self, progress):
         self.progress = progress

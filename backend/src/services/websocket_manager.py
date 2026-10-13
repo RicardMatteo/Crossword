@@ -1,5 +1,5 @@
 from fastapi import WebSocket, WebSocketDisconnect
-from services.game_manager import GAMES, join_room, restart_room, apply_mode
+from services.game_manager import GAMES, join_room, restart_room, apply_mode, link_twitch, stop_twitch
 from crud.user_crud import get_session_user
 from utils.game_status import GameStatus
 
@@ -32,6 +32,9 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
             elif msg_type == "update_settings":
                 if token == game.owner:
                     await game.update_settings(msg.get("settings") or {})
+            elif msg_type == "link_twitch":
+                if token == game.owner:
+                    await link_twitch(game, msg.get("channel"))
             elif msg_type == "start_game":
                 if token == game.owner and game.status == GameStatus.WAITING_FOR_PLAYERS:
                     game = apply_mode(game)
@@ -47,3 +50,6 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
         if player and player.websocket is websocket:
             player.disconnect()
             await game.on_player_left(token)
+            # Nobody left to watch: stop reading the chat (restarted when someone comes back)
+            if game.connected_count() == 0:
+                stop_twitch(room_id)
