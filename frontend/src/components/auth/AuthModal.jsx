@@ -6,8 +6,7 @@ import { useLanguage } from "../../contexts/LanguageContext"
 import "./AuthModal.css"
 
 /**
- * Authentication modal for user sign-in and sign-up
- * Handles user authentication with form validation and backend requests
+ * Log in / sign up modal. Server error codes are shown through the `authErr_*` translations.
  */
 const AuthModal = ({ onClose, onSuccess }) => {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -27,27 +26,23 @@ const AuthModal = ({ onClose, onSuccess }) => {
     setLoading(true)
     setError("")
 
-    try {
-      let result
-      if (isSignUp) {
-        result = await register(formData)
-      } else {
-        result = await login({
-          email: formData.email,
-          password: formData.password,
-        })
-      }
+    const result = isSignUp
+      ? await register(formData)
+      : await login({ email: formData.email, password: formData.password })
+    setLoading(false)
 
-      if (result.success) {
-        onSuccess()
-      } else {
-        setError(result.error || "Authentication failed")
-      }
-    } catch (err) {
-      setError("Network error. Please try again.")
-    } finally {
-      setLoading(false)
+    if (result.success) {
+      onSuccess?.()
+      onClose()
+    } else {
+      const key = `authErr_${result.error}`
+      setError(t(key) === key ? t("authErr_generic") : t(key))
     }
+  }
+
+  const switchMode = () => {
+    setIsSignUp(!isSignUp)
+    setError("")
   }
 
   return (
@@ -71,8 +66,13 @@ const AuthModal = ({ onClose, onSuccess }) => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+                minLength={2}
+                maxLength={20}
+                autoComplete="username"
+                autoFocus
                 disabled={loading}
               />
+              <small className="form-hint">{t("nameHint")}</small>
             </div>
           )}
 
@@ -84,6 +84,8 @@ const AuthModal = ({ onClose, onSuccess }) => {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
+              autoComplete="email"
+              autoFocus={!isSignUp}
               disabled={loading}
             />
           </div>
@@ -96,8 +98,11 @@ const AuthModal = ({ onClose, onSuccess }) => {
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
+              minLength={isSignUp ? 8 : undefined}
+              autoComplete={isSignUp ? "new-password" : "current-password"}
               disabled={loading}
             />
+            {isSignUp && <small className="form-hint">{t("passwordHint")}</small>}
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ width: "100%" }} disabled={loading}>
@@ -107,7 +112,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
 
         <p>
           {isSignUp ? t("alreadyAccount") : t("noAccount")}
-          <button type="button" className="link-btn" onClick={() => setIsSignUp(!isSignUp)} disabled={loading}>
+          <button type="button" className="link-btn" onClick={switchMode} disabled={loading}>
             {isSignUp ? t("login") : t("signup")}
           </button>
         </p>

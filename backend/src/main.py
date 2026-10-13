@@ -4,8 +4,9 @@ import uvicorn
 import asyncio
 import logging
 
-from api.routes import game_routes, websocket_routes
+from api.routes import auth_routes, game_routes, websocket_routes
 from core.database import database
+from core.schema import create_schema
 
 app = FastAPI()
 
@@ -19,6 +20,7 @@ app.add_middleware(
 
 app.include_router(game_routes.router)
 app.include_router(websocket_routes.router)
+app.include_router(auth_routes.router)
 
 @app.on_event("startup")
 async def startup():
@@ -42,6 +44,7 @@ async def startup():
                 logger.error("Exceeded max retries connecting to database. Raising.")
                 raise
             await asyncio.sleep(delay)
+    await create_schema()
 
 
 @app.on_event("shutdown")

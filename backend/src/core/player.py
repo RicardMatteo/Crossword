@@ -6,6 +6,7 @@ class Player:
         self.is_connected = True
         self.progress = None
         self.is_finished = False
+        self.user_id = None  # set when the player is logged in: their results are saved
 
     def set_progress(self, progress):
         self.progress = progress

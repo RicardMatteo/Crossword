@@ -71,7 +71,90 @@
   margin: 0;
 }
 
+.profile-section-title {
+  margin: 2.5rem 0 1rem;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+}
+
+.profile-card {
+  background: var(--bg-primary);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+}
+
+.profile-empty {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.recent-games {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.recent-games th,
+.recent-games td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.recent-games th {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.recent-games tr.won td:nth-child(3) {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.account-forms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.account-form h3 {
+  margin: 0 0 1rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.account-form.danger h3 {
+  color: var(--danger-color);
+}
+
+.account-form-description {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+}
+
+.form-success,
+.form-error {
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem;
+}
+
+.form-success {
+  color: var(--success-color);
+}
+
+.form-error {
+  color: var(--danger-color);
+}
+
 @media (max-width: 768px) {
+  .profile-card {
+    overflow-x: auto;
+  }
+
   .profile-header {
     flex-direction: column;
     text-align: center;

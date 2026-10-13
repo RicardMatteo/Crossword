@@ -6,6 +6,7 @@ import { useTheme } from "../../contexts/ThemeContext"
 import { useAuth } from "../../contexts/AuthContext"
 import { useLanguage } from "../../contexts/LanguageContext"
 import LanguageDropdown from "../ui/LanguageDropdown"
+import AuthModal from "../auth/AuthModal"
 import "./Navbar.css"
 
 /**
@@ -18,6 +19,7 @@ const Navbar = () => {
   const { language, toggleLanguage, t } = useLanguage()
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
 
   const isActive = (path) => location.pathname === path
   const currentPlayerName = getCurrentPlayerName()
@@ -67,17 +69,26 @@ const Navbar = () => {
 
             {isAuthenticated ? (
               <div className="user-menu">
-                <span className="user-name">Hello, {user?.name}!</span>
+                <Link to="/profile" className="user-name" onClick={() => setIsMobileMenuOpen(false)}>
+                  👤 {user.name}
+                </Link>
                 <button className="logout-btn" onClick={handleLogout}>
                   {t("logout")}
                 </button>
               </div>
             ) : (
-              currentPlayerName && (
-                <div className="guest-menu">
-                  <span className="guest-name">👤 {currentPlayerName}</span>
-                </div>
-              )
+              <div className="guest-menu">
+                {currentPlayerName && <span className="guest-name">{currentPlayerName}</span>}
+                <button
+                  className="btn btn-primary login-btn"
+                  onClick={() => {
+                    setShowAuth(true)
+                    setIsMobileMenuOpen(false)
+                  }}
+                >
+                  {t("login")}
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -92,6 +103,7 @@ const Navbar = () => {
           <span></span>
         </button>
       </div>
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
     </nav>
   )
 }

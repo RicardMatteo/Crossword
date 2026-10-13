@@ -15,9 +15,11 @@ const newRoomId = () => Math.random().toString(36).substring(2, 8).toUpperCase()
  */
 const HomePage = () => {
   const navigate = useNavigate()
-  const { getCurrentPlayerName, setGuestName } = useAuth()
+  const { user, isAuthenticated, getCurrentPlayerName, setGuestName } = useAuth()
   const { t } = useLanguage()
-  const [name, setName] = useState(getCurrentPlayerName())
+  const [guestInput, setGuestInput] = useState(getCurrentPlayerName())
+  // Logged-in players always play under their account name
+  const name = isAuthenticated ? user.name : guestInput
   const [roomCode, setRoomCode] = useState("")
   const [publicGames, setPublicGames] = useState([])
   const [loading, setLoading] = useState(false)
@@ -43,7 +45,7 @@ const HomePage = () => {
   const goToRoom = (roomId) => {
     const trimmed = name.trim()
     if (!trimmed || !roomId) return
-    if (trimmed !== getCurrentPlayerName()) setGuestName(trimmed)
+    if (!isAuthenticated && trimmed !== getCurrentPlayerName()) setGuestName(trimmed)
     navigate(`/game/${roomId}`)
   }
 
@@ -64,19 +66,27 @@ const HomePage = () => {
         </header>
 
         <section className="home-card">
-          <label className="form-label" htmlFor="player-name">
-            {t("yourName")}
-          </label>
-          <input
-            id="player-name"
-            className="form-input"
-            placeholder={t("enterName")}
-            value={name}
-            maxLength={20}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && goToRoom(newRoomId())}
-            autoFocus={!hasName}
-          />
+          {isAuthenticated ? (
+            <p className="playing-as">
+              {t("playingAs")} <strong>{user.name}</strong>
+            </p>
+          ) : (
+            <>
+              <label className="form-label" htmlFor="player-name">
+                {t("yourName")}
+              </label>
+              <input
+                id="player-name"
+                className="form-input"
+                placeholder={t("enterName")}
+                value={guestInput}
+                maxLength={20}
+                onChange={(e) => setGuestInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && goToRoom(newRoomId())}
+                autoFocus={!hasName}
+              />
+            </>
+          )}
 
           <div className="home-actions">
             <button className="btn btn-primary" disabled={!hasName} onClick={() => goToRoom(newRoomId())}>
@@ -104,6 +114,7 @@ const HomePage = () => {
           </div>
 
           {!hasName && <p className="home-hint">{t("nameRequired")}</p>}
+          {!isAuthenticated && hasName && <p className="home-hint">{t("loginToKeepStats")}</p>}
         </section>
 
         <section className="home-games">

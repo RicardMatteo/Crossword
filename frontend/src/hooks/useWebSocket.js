@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from "react"
+import { getAuthToken } from "../contexts/AuthContext"
 
 const useWebSocket = (roomId, playerName) => {
   const [token, setToken] = useState(localStorage.getItem(`token-${roomId}`) || null)
@@ -40,6 +41,7 @@ const useWebSocket = (roomId, playerName) => {
     }
 
     let stopped = false
+    setJoinError(null) // e.g. retrying with another name after "name_taken"
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
     const wsUrl = `${protocol}//${window.location.host}/ws/${roomId}`
@@ -56,7 +58,8 @@ const useWebSocket = (roomId, playerName) => {
         reconnectRef.current.attempts = 0
         // read the token at send time: the closure value is stale after the first join
         const savedToken = localStorage.getItem(`token-${roomId}`)
-        socket.send(JSON.stringify({ type: "join", name: playerName, token: savedToken }))
+        // The session token links the player to their account (the server then imposes its name)
+        socket.send(JSON.stringify({ type: "join", name: playerName, token: savedToken, authToken: getAuthToken() }))
         // ask server to send current players list to avoid missed broadcasts
         socket.send(JSON.stringify({ type: "request_players" }))
       }

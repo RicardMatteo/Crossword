@@ -194,3 +194,15 @@
     border-top: 1px solid var(--border-color);
   }
 }
+
+a.user-name {
+  text-decoration: none;
+}
+
+a.user-name:hover {
+  color: var(--accent-primary);
+}
+
+.login-btn {
+  padding: 0.5rem 1rem;
+}

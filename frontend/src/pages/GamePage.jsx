@@ -23,7 +23,7 @@ import GameResults, { formatTime } from "../components/game/GameResults"
 export default function GamePage() {
   const { roomId } = useParams()
   const navigate = useNavigate()
-  const { getCurrentPlayerName, setGuestName } = useAuth()
+  const { user, isAuthenticated, getCurrentPlayerName, setGuestName } = useAuth()
   const { t } = useLanguage()
 
   // Game state
@@ -39,9 +39,12 @@ export default function GamePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Player state
-  const [playerName, setPlayerName] = useState(getCurrentPlayerName())
-  const [showNameInput, setShowNameInput] = useState(!getCurrentPlayerName())
+  // Player state: a logged-in player always plays under their account name
+  // (the draft is what a guest is typing: only the confirmed name opens the connection)
+  const [guestName, setGuestNameState] = useState(getCurrentPlayerName())
+  const [nameDraft, setNameDraft] = useState(guestName)
+  const playerName = isAuthenticated ? user.name : guestName
+  const showNameInput = !isAuthenticated && !guestName
 
   // WebSocket connection
   const {
@@ -390,10 +393,12 @@ export default function GamePage() {
 
   // Handle player name change
   const handlePlayerNameChange = (newName) => {
-    setPlayerName(newName)
+    setGuestNameState(newName)
     setGuestName(newName)
-    setShowNameInput(false)
   }
+
+  // The server refused our name: let a guest pick another one
+  const nameError = joinError === "name_taken" ? t("nameTakenInRoom") : joinError === "name_reserved" ? t("nameReserved") : null
 
   const handleStartGame = () => {
     startGame()
@@ -426,37 +431,50 @@ export default function GamePage() {
   }
 
   // Update the return statement to conditionally render based on gamePhase:
-  if (joinError) {
+  // A guest picks their name before joining, or another one if the server refused it
+  if (!isAuthenticated && (nameError || (gamePhase === "lobby" && showNameInput))) {
+    const draft = nameDraft.trim()
+    // Re-sending the refused name would not reconnect
+    const canSubmit = draft !== "" && !(nameError && draft === playerName)
     return (
-      <div className="game-error">
-        <h2>{joinError === "room_full" ? t("roomFull") : t("joinFailed")}</h2>
-        <button className="btn btn-primary" onClick={() => navigate("/")}>
-          {t("backToHome")}
-        </button>
+      <div className="game-page">
+        <form
+          className="name-prompt"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (canSubmit) handlePlayerNameChange(draft)
+          }}
+        >
+          <label className="form-label" htmlFor="game-player-name">
+            {t("yourName")}
+          </label>
+          {nameError && <p className="name-error">{nameError}</p>}
+          <div className="name-input-container">
+            <input
+              id="game-player-name"
+              className="form-input"
+              placeholder={t("enterName")}
+              value={nameDraft}
+              maxLength={20}
+              onChange={(e) => setNameDraft(e.target.value)}
+              autoFocus
+            />
+            <button className="btn btn-primary" type="submit" disabled={!canSubmit}>
+              OK
+            </button>
+          </div>
+        </form>
       </div>
     )
   }
 
-  if (gamePhase === "lobby" && showNameInput) {
+  if (joinError) {
     return (
-      <div className="game-page">
-        <div className="name-input-container">
-          <input
-            className="form-input"
-            placeholder={t("enterName")}
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && playerName.trim() && handlePlayerNameChange(playerName.trim())}
-            autoFocus
-          />
-          <button
-            className="btn btn-primary"
-            onClick={() => playerName.trim() && handlePlayerNameChange(playerName.trim())}
-            disabled={!playerName.trim()}
-          >
-            OK
-          </button>
-        </div>
+      <div className="game-error">
+        <h2>{joinError === "room_full" ? t("roomFull") : nameError || t("joinFailed")}</h2>
+        <button className="btn btn-primary" onClick={() => navigate("/")}>
+          {t("backToHome")}
+        </button>
       </div>
     )
   }
@@ -518,31 +536,9 @@ export default function GamePage() {
               {t("roomLabel")} {roomId}
             </h1>
             <div className="player-info">
-              {showNameInput ? (
-                <div className="name-input-container">
-                  <input
-                    className="form-input"
-                    placeholder={t("enterName")}
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                    onKeyPress={(e) =>
-                      e.key === "Enter" && playerName.trim() && handlePlayerNameChange(playerName.trim())
-                    }
-                    autoFocus
-                  />
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => playerName.trim() && handlePlayerNameChange(playerName.trim())}
-                    disabled={!playerName.trim()}
-                  >
-                    OK
-                  </button>
-                </div>
-              ) : (
-                <span className="current-player">
-                  {t("playerLabel")} {playerName}
-                </span>
-              )}
+              <span className="current-player">
+                {t("playerLabel")} {playerName}
+              </span>
             </div>
           </div>
 

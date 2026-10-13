@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import asyncio
 import time
 
+from crud import stats_crud
 from utils.game_status import GameStatus
 
 # How a game ends, chosen by the owner when starting it:
@@ -17,28 +18,6 @@ MAX_PLAYERS_LIMIT = 8
 
 class Game(ABC):
     mode = None  # "classic" or "coop", set by subclasses
-    class Player:
-        def __init__(self, token, name, websocket=None):
-            self.token = token
-            self.name = name
-            self.websocket = websocket
-            self.is_connected = True
-            self.progress = None
-            self.is_finished = False
-
-        def set_progress(self, progress):
-            self.progress = progress
-
-        def mark_finished(self):
-            self.is_finished = True
-
-        def disconnect(self):
-            self.is_connected = False
-
-        def reconnect(self, websocket):
-            self.websocket = websocket
-            self.is_connected = True
-
     def __init__(self, room_id, grid, owner, is_public=True):
         """
         :param room_id: Unique identifier for the game room.
@@ -63,6 +42,7 @@ class Game(ABC):
         self.end_task = None
         self.end_at = None
         self.results = None
+        self.ranked_tokens = []  # tokens in ranking order, kept server-side (tokens are secrets)
 
     
     async def join(self, websocket, name, token):
@@ -221,12 +201,38 @@ class Game(ABC):
                     await player.websocket.send_json(self.finished_message(token))
                 except Exception as e:
                     print(f"Error sending message to player {token}: {e}")
+        await self.save_results()
+
+    async def save_results(self):
+        """Store the result of each logged-in player for their profile stats."""
+        rows = []
+        for rank, (token, row) in enumerate(zip(self.ranked_tokens, self.results), start=1):
+            user_id = self.players[token].user_id
+            if user_id is None:
+                continue
+            rows.append({
+                "user_id": user_id,
+                "mode": self.mode,
+                "rank": 1 if self.mode == "coop" else rank,
+                "player_count": len(self.results),
+                "finished": row["finished"],
+                "time": row["time"],
+                "percent": row["percent"],
+                "words_found": row["wordsFound"],
+                # coop: the team completed the grid; classic: first to complete it
+                "won": row["finished"] and (self.mode == "coop" or rank == 1),
+            })
+        try:
+            await stats_crud.save_results(rows)
+        except Exception as e:
+            print(f"Error saving results of room {self.room_id}: {e}")
 
     def compute_results(self):
         rows = []
         for token, player in self.players.items():
             percent, words_found = self.player_stats(token)
             rows.append({
+                "token": token,
                 "name": player.name,
                 "finished": token in self.finish_times,
                 "time": self.finish_times.get(token),
@@ -236,6 +242,7 @@ class Game(ABC):
             })
         # Finishers first (fastest first), then by how much of the grid they filled
         rows.sort(key=lambda r: (not r["finished"], r["time"] or 0, -r["percent"], -r["wordsFound"]))
+        self.ranked_tokens = [row.pop("token") for row in rows]
         return rows
 
     def finished_message(self, token):
@@ -258,6 +265,7 @@ class Game(ABC):
         self.started_at = None
         self.finish_times = {}
         self.results = None
+        self.ranked_tokens = []
         self.reset_progress()
         await self.send_message_to_all({"type": "game_reset"})
 

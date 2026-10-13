@@ -1,5 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect
 from services.game_manager import GAMES, join_room, restart_room, apply_mode
+from crud.user_crud import get_session_user
 from utils.game_status import GameStatus
 
 async def handle_websocket(websocket: WebSocket, room_id: str):
@@ -9,9 +10,8 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
     except WebSocketDisconnect:
         return
 
-    name = init.get("name")
-
-    join = await join_room(room_id, websocket, name, init.get("token"))
+    user = await get_session_user(init.get("authToken"))
+    join = await join_room(room_id, websocket, init.get("name"), init.get("token"), user)
     if "error" in join:
         await websocket.close(code=4000, reason=join["error"])
         return

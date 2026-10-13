@@ -43,6 +43,24 @@
   gap: 0.5rem;
 }
 
+.name-prompt {
+  max-width: 420px;
+  margin: 4rem auto;
+  padding: 1.5rem;
+  background: var(--bg-primary);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+}
+
+.name-prompt .name-input-container .form-input {
+  flex: 1;
+}
+
+.name-error {
+  color: var(--danger-color);
+  margin-bottom: 0.75rem;
+}
+
 .current-player {
   color: var(--text-secondary);
   font-weight: 500;

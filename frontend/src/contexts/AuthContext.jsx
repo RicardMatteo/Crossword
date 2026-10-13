@@ -1,103 +1,112 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect, useCallback } from "react"
 
 const AuthContext = createContext()
 
-/**
- * Authentication provider that manages user state
- * Handles both authenticated users and guest users with temporary names
- */
+const USER_KEY = "crossword-user"
+const TOKEN_KEY = "crossword-auth-token"
+
 // Read the saved session synchronously so the very first render already knows
 // the player's name (pages like GamePage read it in their initial state)
 const loadSavedUser = () => {
-  const savedUser = localStorage.getItem("crossword-user")
-  if (!savedUser) return null
+  const savedUser = localStorage.getItem(USER_KEY)
+  if (!savedUser || !localStorage.getItem(TOKEN_KEY)) return null
   try {
     return JSON.parse(savedUser)
   } catch (error) {
     console.error("Error parsing saved user data:", error)
-    localStorage.removeItem("crossword-user")
+    localStorage.removeItem(USER_KEY)
     return null
   }
 }
 
+export const getAuthToken = () => localStorage.getItem(TOKEN_KEY)
+
+/**
+ * Call the API with the session token. Throws an Error whose message is the
+ * server's error code (e.g. "name_taken"), used as an `authErr_*` translation key.
+ */
+export const authFetch = async (url, { method = "GET", body } = {}) => {
+  const headers = { "Content-Type": "application/json" }
+  const token = getAuthToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+  let response
+  try {
+    response = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined })
+  } catch {
+    throw new Error("generic")
+  }
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    const error = new Error(typeof data.detail === "string" ? data.detail : "generic")
+    error.status = response.status
+    throw error
+  }
+  return data
+}
+
+/**
+ * Accounts are optional: a guest plays with a name of their choice, a logged-in
+ * player plays under their account name and gets their results saved.
+ */
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(loadSavedUser)
-  const [isAuthenticated, setIsAuthenticated] = useState(() => user !== null)
   const [guestName, setGuestName] = useState(() => localStorage.getItem("crossword-guest-name") || "")
-  const [loading] = useState(false)
+  const isAuthenticated = user !== null
 
-  const login = async (userData) => {
-    try {
-      // Make actual API call to backend
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      })
-
-      if (!response.ok) {
-        throw new Error("Login failed")
-      }
-
-      const result = await response.json()
-
-      setUser(result.user)
-      setIsAuthenticated(true)
-      localStorage.setItem("crossword-user", JSON.stringify(result.user))
-      localStorage.setItem("crossword-auth-token", result.token)
-
-      return { success: true }
-    } catch (error) {
-      console.error("Login error:", error)
-      return { success: false, error: error.message }
-    }
+  const saveSession = (newUser, token) => {
+    setUser(newUser)
+    localStorage.setItem(USER_KEY, JSON.stringify(newUser))
+    if (token) localStorage.setItem(TOKEN_KEY, token)
   }
 
-  const register = async (userData) => {
-    try {
-      // Make actual API call to backend
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      })
-
-      if (!response.ok) {
-        throw new Error("Registration failed")
-      }
-
-      const result = await response.json()
-
-      setUser(result.user)
-      setIsAuthenticated(true)
-      localStorage.setItem("crossword-user", JSON.stringify(result.user))
-      localStorage.setItem("crossword-auth-token", result.token)
-
-      return { success: true }
-    } catch (error) {
-      console.error("Registration error:", error)
-      return { success: false, error: error.message }
-    }
-  }
-
-  const logout = () => {
+  const clearSession = useCallback(() => {
     setUser(null)
-    setIsAuthenticated(false)
-    localStorage.removeItem("crossword-user")
-    localStorage.removeItem("crossword-auth-token")
-    // Keep guest name for convenience
+    localStorage.removeItem(USER_KEY)
+    localStorage.removeItem(TOKEN_KEY)
+  }, [])
+
+  // The saved session may have expired or been revoked (password changed elsewhere)
+  useEffect(() => {
+    if (!getAuthToken()) return
+    authFetch("/api/auth/me")
+      .then((data) => saveSession(data.user))
+      .catch((error) => error.status === 401 && clearSession())
+  }, [clearSession])
+
+  const run = async (request) => {
+    try {
+      const data = await request()
+      saveSession(data.user, data.token)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
   }
 
-  const updateUser = (updatedData) => {
-    const newUserData = { ...user, ...updatedData }
-    setUser(newUserData)
-    localStorage.setItem("crossword-user", JSON.stringify(newUserData))
+  const login = ({ email, password }) =>
+    run(() => authFetch("/api/auth/login", { method: "POST", body: { email, password } }))
+
+  const register = ({ name, email, password }) =>
+    run(() => authFetch("/api/auth/register", { method: "POST", body: { name, email, password } }))
+
+  // { name } and/or { currentPassword, newPassword }
+  const updateUserProfile = (changes) => run(() => authFetch("/api/user/update", { method: "PUT", body: changes }))
+
+  const logout = async () => {
+    await authFetch("/api/auth/logout", { method: "POST" }).catch(() => {})
+    clearSession()
+  }
+
+  const deleteAccount = async (password) => {
+    try {
+      await authFetch("/api/user/delete", { method: "POST", body: { password } })
+      clearSession()
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
   }
 
   const setGuestNameAndSave = (name) => {
@@ -109,44 +118,17 @@ export const AuthProvider = ({ children }) => {
     return user?.name || guestName || ""
   }
 
-  const updateUserProfile = async (userData) => {
-    try {
-      const token = localStorage.getItem("crossword-auth-token")
-      const response = await fetch("/api/user/update", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(userData),
-      })
-
-      if (!response.ok) {
-        throw new Error("Update failed")
-      }
-
-      const result = await response.json()
-      updateUser(result.user)
-
-      return { success: true }
-    } catch (error) {
-      console.error("Update error:", error)
-      return { success: false, error: error.message }
-    }
-  }
-
   return (
     <AuthContext.Provider
       value={{
         user,
         isAuthenticated,
         guestName,
-        loading,
         login,
         register,
         logout,
-        updateUser,
         updateUserProfile,
+        deleteAccount,
         setGuestName: setGuestNameAndSave,
         getCurrentPlayerName,
       }}

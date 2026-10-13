@@ -1,4 +1,5 @@
 from crud.game_crud import get_random_grid
+from crud.user_crud import name_taken
 from utils.normalize import normalize_grid
 import uuid
 
@@ -74,8 +75,27 @@ async def create_room(room_id, owner, game_mode="classic") -> dict:
     }
  
 
-async def join_room(room_id, websocket, name, token=None) -> dict:
-    """Join an existing game room or create a new one if it doesn't exist."""
+async def check_new_name(game, name, user):
+    """Error code if `name` can't be used by a player joining `game`, else None."""
+    if any(p.is_connected and p.name.lower() == name.lower() for p in game.players.values()):
+        return "name_taken"
+    # A guest can't borrow the name of an account
+    if user is None and await name_taken(name):
+        return "name_reserved"
+    return None
+
+
+async def join_room(room_id, websocket, name, token=None, user=None) -> dict:
+    """Join an existing game room or create a new one if it doesn't exist.
+
+    `user` is the logged-in account, if any: it imposes the player's name.
+    """
+    if user:
+        name = user["name"]
+    name = (name or "").strip()[:20]
+    if not name:
+        return {"error": "name_required"}
+
     game = GAMES.get(room_id)
     if not game:
         created = await create_room(room_id, None)
@@ -86,17 +106,23 @@ async def join_room(room_id, websocket, name, token=None) -> dict:
     if not token or token not in game.players:
         if game.is_full():
             return {"error": "room_full"}
+        error = await check_new_name(game, name, user)
+        if error:
+            return {"error": error}
         token = f"{room_id}-{uuid.uuid4()}"
         while token in game.players:
             token = f"{room_id}-{uuid.uuid4()}"
         await websocket.send_json({"type": "token", "token": token, "room_id": room_id})
         await game.join(websocket, name, token)
+        game.players[token].user_id = user["id"] if user else None
     else:
         print(f"Reconnecting player {name} with token {token} in room {room_id}")
         await websocket.send_json({"type": "token", "token": token, "room_id": room_id})
-        game.players[token].reconnect(websocket)
-        if name:
-            game.players[token].name = name
+        player = game.players[token]
+        player.reconnect(websocket)
+        player.name = name
+        if user:
+            player.user_id = user["id"]
 
     # The first player (or the first one back if the owner left) owns the room
     owner = game.players.get(game.owner)

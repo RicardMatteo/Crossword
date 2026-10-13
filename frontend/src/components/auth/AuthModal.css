@@ -56,3 +56,10 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.form-hint {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
