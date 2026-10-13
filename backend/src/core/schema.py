@@ -44,11 +44,14 @@ SCHEMA = [
         login VARCHAR(25) NOT NULL,
         display_name VARCHAR(50) NOT NULL,
         words INTEGER NOT NULL DEFAULT 0,
+        letters INTEGER NOT NULL DEFAULT 0,
         grids INTEGER NOT NULL DEFAULT 0,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         PRIMARY KEY (channel, login)
     )
     """,
+    # added after the table's creation
+    "ALTER TABLE twitch_scores ADD COLUMN IF NOT EXISTS letters INTEGER NOT NULL DEFAULT 0",
 ]
 
 

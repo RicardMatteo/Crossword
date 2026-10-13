@@ -34,8 +34,8 @@
 }
 
 .overlay-side {
-  width: 26vw;
-  min-width: 280px;
+  width: 20vw;
+  min-width: 250px;
   display: flex;
   flex-direction: column;
   gap: 1.2vh;
@@ -67,6 +67,10 @@
 }
 
 .overlay-channel {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 700;
   color: #9146ff;
   font-size: clamp(1rem, 1.3vw, 1.6rem);
@@ -171,6 +175,21 @@ ol.overlay-list li span:first-child {
 
 .overlay-feed-hint {
   color: var(--warning-color);
+}
+
+.overlay-hint-count {
+  font-weight: 700;
+}
+
+.overlay-score {
+  font-weight: 600;
+}
+
+.overlay-score small {
+  margin-left: 0.4em;
+  font-weight: 400;
+  font-size: 0.8em;
+  color: var(--text-secondary);
 }
 
 .overlay-empty {

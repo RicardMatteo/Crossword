@@ -163,6 +163,7 @@ export default function OverlayPage() {
                 entry.hint ? (
                   <li key={i} className="overlay-feed-hint">
                     <span>💡 {t("overlayHint")}</span>
+                    {entry.count > 1 && <span className="overlay-hint-count">×{entry.count}</span>}
                   </li>
                 ) : (
                   <li key={i}>
@@ -181,11 +182,14 @@ export default function OverlayPage() {
           <h2>{top === state.topAllTime ? t("overlayTopAllTime") : t("overlayTopGame")}</h2>
           {top.length ? (
             <ol className="overlay-list">
-              {top.map(({ name, words }) => (
+              {top.map(({ name, letters, words }) => (
                 <li key={name}>
                   <span>{name}</span>
-                  <span>
-                    {words} {t(words > 1 ? "wordsShort" : "wordShort")}
+                  <span className="overlay-score">
+                    {letters} {t(letters > 1 ? "lettersShort" : "letterShort")}
+                    <small>
+                      {words} {t(words > 1 ? "wordsShort" : "wordShort")}
+                    </small>
                   </span>
                 </li>
               ))}

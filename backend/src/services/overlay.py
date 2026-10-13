@@ -87,13 +87,18 @@ class ChannelOverlay:
         return all(cell != "" for row in self.letters for cell in row if cell is not None)
 
     def fill(self, cells):
+        """Writes the solution in `cells`; returns how many of them were still empty."""
         solution = self.grid["solution_grid"]
+        new = 0
         for r, c in cells:
+            if self.letters[r][c] == "":
+                new += 1
             self.letters[r][c] = solution[r][c]
         # Crossing words may now be complete too
         for i, word in enumerate(self.grid["placed_words"]):
             if i not in self.found_words and all(self.letters[r][c] for r, c in word_cells(word)):
                 self.found_words.add(i)
+        return new
 
     async def finish(self):
         self.status = "finished"
@@ -125,13 +130,15 @@ class ChannelOverlay:
                 break
         else:
             return
-        self.fill(word_cells(word))
+        # Viewers score the letters they uncover, not those already revealed by hints or crossing words
+        letters = self.fill(word_cells(word))
         self.last_progress = time.monotonic()
-        entry = self.viewers.setdefault(login, {"name": viewer, "words": 0})
+        entry = self.viewers.setdefault(login, {"name": viewer, "words": 0, "letters": 0})
         entry["words"] += 1
+        entry["letters"] += letters
         self.feed.appendleft({"viewer": viewer, "word": guess})
         try:
-            await twitch_crud.add_word(self.channel, login, viewer)
+            await twitch_crud.add_word(self.channel, login, viewer, letters)
             self.top_all_time = await twitch_crud.top_viewers(self.channel, TOP_SIZE)
         except Exception as e:
             print(f"Overlay #{self.channel}: error saving score: {e!r}")
@@ -160,7 +167,11 @@ class ChannelOverlay:
         cell = random.choice(empty)
         self.revealed.add(cell)
         self.fill([cell])
-        self.feed.appendleft({"hint": True})
+        # Consecutive hints share one feed line ("Letter revealed ×5")
+        if self.feed and self.feed[0].get("hint"):
+            self.feed[0]["count"] += 1
+        else:
+            self.feed.appendleft({"hint": True, "count": 1})
         if self.is_complete():
             await self.finish()
         else:
@@ -185,7 +196,7 @@ class ChannelOverlay:
 
     def state(self):
         cells = [cell for row in self.letters for cell in row if cell is not None]
-        top_game = sorted(self.viewers.values(), key=lambda v: -v["words"])[:TOP_SIZE]
+        top_game = sorted(self.viewers.values(), key=lambda v: (-v["letters"], -v["words"]))[:TOP_SIZE]
         finished = self.status == "finished"
         return {
             "type": "overlay",
