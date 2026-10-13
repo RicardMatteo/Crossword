@@ -1,25 +1,22 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { useLanguage } from "../../contexts/LanguageContext"
-import { useAuth } from "../../contexts/AuthContext"
 import "./GameLobby.css"
 
+const END_DELAYS = [15, 30, 60, 90, 120, 180, 300]
+const MAX_PLAYERS = [2, 3, 4, 5, 6, 7, 8]
+
 /**
- * Game lobby component where players wait and owner configures game settings
+ * Game lobby: players wait while the owner edits the settings.
+ * Settings live on the server; everyone sees them, only the owner can change them.
  */
-const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players }) => {
+const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players, settings, onChangeSettings }) => {
   const { t } = useLanguage()
-  const { getCurrentPlayerName } = useAuth()
-  const [gameSettings, setGameSettings] = useState({
-    gameMode: "classic", // "classic" | "coop"
-    privacy: "public",
-    ranked: false,
-    maxPlayers: 4,
-    difficulty: "medium",
-    endRule: "first",
-    endDelay: 60,
-  })
+
+  const gameModes = [
+    { value: "classic", label: t("modeClassic") },
+    { value: "coop", label: t("modeCoop") },
+  ]
 
   const endRules = [
     { value: "first", label: t("endRuleFirst") },
@@ -27,31 +24,21 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players 
     { value: "delay", label: t("endRuleDelay") },
   ]
 
-  const gameModes = [
-    { value: "classic", label: t("modeClassic") },
-    { value: "coop", label: t("modeCoop") },
-  ]
+  const select = (key, options, parse = (v) => v) => (
+    <select
+      value={String(settings[key])}
+      onChange={(e) => onChangeSettings({ [key]: parse(e.target.value) })}
+      className="setting-select"
+      disabled={!isOwner}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={String(option.value)}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  )
 
-  const privacyOptions = [
-    { value: "public", label: "Public" },
-    { value: "private", label: "Private" },
-    { value: "friends", label: "Friends Only" },
-  ]
-
-  const difficultyLevels = [
-    { value: "easy", label: "Easy" },
-    { value: "medium", label: "Medium" },
-    { value: "hard", label: "Hard" },
-  ]
-
-  const handleSettingChange = (setting, value) => {
-    setGameSettings((prev) => ({
-      ...prev,
-      [setting]: value,
-    }))
-  }
-
-  const canStartGame = players.length >= 1
   return (
     <div className="game-lobby">
       <div className="lobby-header">
@@ -66,7 +53,8 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players 
       <div className="lobby-content">
         <div className="players-section">
           <h3>
-            {t("playersInLobby")} ({players.length}/{gameSettings.maxPlayers})
+            {t("playersInLobby")} ({players.length}
+            {settings && `/${settings.maxPlayers}`})
           </h3>
           <div className="players-list">
             {players.map((player) => (
@@ -80,133 +68,67 @@ const GameLobby = ({ roomId, onStartGame, onLeaveGame, isOwner = false, players 
           </div>
         </div>
 
-        {isOwner && (
-          <div className="settings-section">
-            <h3>{t("gameSettings")}</h3>
+        <div className="settings-section">
+          <h3>{t("gameSettings")}</h3>
+          {settings && (
             <div className="settings-grid">
               <div className="setting-group">
                 <label>{t("gameMode")}</label>
-                <select
-                  value={gameSettings.gameMode}
-                  onChange={(e) => handleSettingChange("gameMode", e.target.value)}
-                  className="setting-select"
-                >
-                  {gameModes.map((mode) => (
-                    <option key={mode.value} value={mode.value}>
-                      {mode.label}
-                    </option>
-                  ))}
-                </select>
+                {select("mode", gameModes)}
               </div>
 
               <div className="setting-group">
                 <label>{t("privacy")}</label>
-                <select
-                  value={gameSettings.privacy}
-                  onChange={(e) => handleSettingChange("privacy", e.target.value)}
-                  className="setting-select"
-                >
-                  {privacyOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                {select(
+                  "isPublic",
+                  [
+                    { value: true, label: t("privacyPublic") },
+                    { value: false, label: t("privacyPrivate") },
+                  ],
+                  (v) => v === "true",
+                )}
               </div>
 
               {/* Coop ends when the shared grid is complete: no end rule to pick */}
-              {gameSettings.gameMode === "classic" && (
+              {settings.mode === "classic" && (
                 <div className="setting-group">
                   <label>{t("endRule")}</label>
-                  <select
-                    value={gameSettings.endRule}
-                    onChange={(e) => handleSettingChange("endRule", e.target.value)}
-                    className="setting-select"
-                  >
-                    {endRules.map((rule) => (
-                      <option key={rule.value} value={rule.value}>
-                        {rule.label}
-                      </option>
-                    ))}
-                  </select>
+                  {select("endRule", endRules)}
                 </div>
               )}
 
-              {gameSettings.gameMode === "classic" && gameSettings.endRule === "delay" && (
+              {settings.mode === "classic" && settings.endRule === "delay" && (
                 <div className="setting-group">
                   <label>{t("endDelaySeconds")}</label>
-                  <input
-                    type="number"
-                    min="5"
-                    max="600"
-                    step="5"
-                    value={gameSettings.endDelay}
-                    onChange={(e) => handleSettingChange("endDelay", Number.parseInt(e.target.value) || 60)}
-                    className="setting-input"
-                  />
+                  {select(
+                    "endDelay",
+                    END_DELAYS.map((s) => ({ value: s, label: `${s} s` })),
+                    Number,
+                  )}
                 </div>
               )}
 
               <div className="setting-group">
-                <label>Difficulty</label>
-                <select
-                  value={gameSettings.difficulty}
-                  onChange={(e) => handleSettingChange("difficulty", e.target.value)}
-                  className="setting-select"
-                >
-                  {difficultyLevels.map((level) => (
-                    <option key={level.value} value={level.value}>
-                      {level.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="setting-group">
-                <label>Max Players</label>
-                <input
-                  type="number"
-                  min="2"
-                  max="8"
-                  value={gameSettings.maxPlayers}
-                  onChange={(e) => handleSettingChange("maxPlayers", Number.parseInt(e.target.value))}
-                  className="setting-input"
-                />
-              </div>
-
-              <div className="setting-group checkbox-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={gameSettings.ranked}
-                    onChange={(e) => handleSettingChange("ranked", e.target.checked)}
-                  />
-                  <span className="checkmark"></span>
-                  {t("ranked")} Match
-                </label>
+                <label>{t("maxPlayers")}</label>
+                {select(
+                  "maxPlayers",
+                  MAX_PLAYERS.filter((n) => n >= players.length).map((n) => ({ value: n, label: String(n) })),
+                  Number,
+                )}
               </div>
             </div>
-          </div>
-        )}
+          )}
+          {settings && !settings.isPublic && <p className="setting-hint">{t("privateHint")}</p>}
+        </div>
 
         <div className="lobby-actions">
           {isOwner ? (
-            <button
-              className={`btn btn-primary btn-large ${!canStartGame ? "disabled" : ""}`}
-              onClick={() =>
-                onStartGame({
-                  mode: gameSettings.gameMode,
-                  endRule: gameSettings.endRule,
-                  endDelay: gameSettings.endDelay,
-                })
-              }
-              disabled={!canStartGame}
-            >
-              {canStartGame ? t("startGame") : t("waitingForPlayers")}
+            <button className="btn btn-primary btn-large" onClick={onStartGame}>
+              {t("startGame")}
             </button>
           ) : (
             <div className="waiting-message">
-              <p>{t("waitingForPlayers")}</p>
+              <p>{t("waitingForOwnerStart")}</p>
               <div className="loading-dots">
                 <span></span>
                 <span></span>

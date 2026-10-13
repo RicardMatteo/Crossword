@@ -11,6 +11,9 @@ from utils.game_status import GameStatus
 END_RULES = ("first", "all", "delay")
 DEFAULT_END_DELAY = 60
 MAX_END_DELAY = 600
+GAME_MODES = ("classic", "coop")
+DEFAULT_MAX_PLAYERS = 4
+MAX_PLAYERS_LIMIT = 8
 
 class Game(ABC):
     mode = None  # "classic" or "coop", set by subclasses
@@ -36,23 +39,23 @@ class Game(ABC):
             self.websocket = websocket
             self.is_connected = True
 
-    def __init__(self, room_id, grid, owner, is_public=True, is_ranked=False):
+    def __init__(self, room_id, grid, owner, is_public=True):
         """
-        Initialize the game with a room ID, grid, owner, and optional flags for public and ranked status.
         :param room_id: Unique identifier for the game room.
         :param grid: The grid structure for the game.
         :param owner: The token of the player who owns the game.
-        :param is_public: Whether the game is public (default is True).
-        :param is_ranked: Whether the game is ranked (default is False).
+        :param is_public: Whether the room is listed on the homepage.
         """
         self.room_id = room_id
         self.grid = grid
         self.players = {}
         self.owner = owner
         self.status = GameStatus.WAITING_FOR_PLAYERS
-        self.is_public = is_public
-        self.is_ranked = is_ranked
 
+        # Lobby settings, edited by the owner before the game starts
+        self.is_public = is_public
+        self.max_players = DEFAULT_MAX_PLAYERS
+        self.next_mode = self.mode  # applied when the game starts
         self.end_rule = "first"
         self.end_delay = DEFAULT_END_DELAY
         self.started_at = None
@@ -94,17 +97,56 @@ class Game(ABC):
         # With the "all" rule, a player leaving may be the last one we were waiting for
         await self.check_end()
 
+    def connected_count(self):
+        return sum(player.is_connected for player in self.players.values())
+
+    def is_full(self):
+        return self.connected_count() >= self.max_players
+
+    def settings_message(self):
+        return {
+            "type": "settings",
+            "mode": self.next_mode,
+            "endRule": self.end_rule,
+            "endDelay": self.end_delay,
+            "isPublic": self.is_public,
+            "maxPlayers": self.max_players,
+        }
+
+    def copy_settings_from(self, other):
+        for attr in ("is_public", "max_players", "next_mode", "end_rule", "end_delay"):
+            setattr(self, attr, getattr(other, attr))
+
+    async def update_settings(self, settings):
+        """Apply the valid fields of `settings` and share the result with the room."""
+        if self.status != GameStatus.WAITING_FOR_PLAYERS:
+            return
+        if settings.get("mode") in GAME_MODES:
+            self.next_mode = settings["mode"]
+        if settings.get("endRule") in END_RULES:
+            self.end_rule = settings["endRule"]
+        if "endDelay" in settings:
+            try:
+                self.end_delay = min(max(int(settings["endDelay"]), 5), MAX_END_DELAY)
+            except (TypeError, ValueError):
+                pass
+        if isinstance(settings.get("isPublic"), bool):
+            self.is_public = settings["isPublic"]
+        if "maxPlayers" in settings:
+            try:
+                # Never below the players already in the room
+                lowest = max(2, self.connected_count())
+                self.max_players = min(max(int(settings["maxPlayers"]), lowest), MAX_PLAYERS_LIMIT)
+            except (TypeError, ValueError):
+                pass
+        await self.send_message_to_all(self.settings_message())
+
     def elapsed(self):
         return round(time.monotonic() - self.started_at, 1) if self.started_at else 0
 
-    async def start(self, end_rule=None, end_delay=None):
+    async def start(self):
         if self.status != GameStatus.WAITING_FOR_PLAYERS:
             return
-        self.end_rule = end_rule if end_rule in END_RULES else "first"
-        try:
-            self.end_delay = min(max(int(end_delay), 5), MAX_END_DELAY)
-        except (TypeError, ValueError):
-            self.end_delay = DEFAULT_END_DELAY
         self.status = GameStatus.IN_PROGRESS
         self.started_at = time.monotonic()
         await self.send_message_to_all(self.started_message())

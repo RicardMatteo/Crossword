@@ -29,15 +29,14 @@ async def validate_word(attempt) -> None:
 GAME_MODES = {"classic": NormalGame, "coop": CoopGame}
 
 
-def set_mode(game, mode) -> Game:
-    """Switch a room to another game mode before it starts, keeping players, owner and grid."""
-    cls = GAME_MODES.get(mode, NormalGame)
+def apply_mode(game) -> Game:
+    """Switch the room to the mode picked in the lobby, keeping players, owner, grid and settings."""
+    cls = GAME_MODES.get(game.next_mode, NormalGame)
     if type(game) is cls:
         return game
     new_game = cls(game.room_id, game.grid, game.owner)
     new_game.players = game.players
-    new_game.is_public = game.is_public
-    new_game.is_ranked = game.is_ranked
+    new_game.copy_settings_from(game)
     new_game.reset_progress()
     GAMES[game.room_id] = new_game
     return new_game
@@ -50,7 +49,7 @@ async def restart_room(game) -> None:
         await game.reset(normalize_grid(grid))
 
 
-async def create_room(room_id, owner, game_mode="normal", is_public=True, is_ranked=False) -> dict:
+async def create_room(room_id, owner, game_mode="classic") -> dict:
     """Create a new game room."""
     if room_id in GAMES:
         return {"error": "Room already exists"}
@@ -85,6 +84,8 @@ async def join_room(room_id, websocket, name, token=None) -> dict:
         game = GAMES[room_id]
 
     if not token or token not in game.players:
+        if game.is_full():
+            return {"error": "room_full"}
         token = f"{room_id}-{uuid.uuid4()}"
         while token in game.players:
             token = f"{room_id}-{uuid.uuid4()}"
@@ -103,6 +104,7 @@ async def join_room(room_id, websocket, name, token=None) -> dict:
         game.owner = token
 
     await game.send_message_to_all(game.players_message())
+    await websocket.send_json(game.settings_message())
 
     # Bring a (re)joining player up to speed with the game's state
     if game.status == GameStatus.IN_PROGRESS:

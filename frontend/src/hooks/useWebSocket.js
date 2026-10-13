@@ -24,6 +24,10 @@ const useWebSocket = (roomId, playerName) => {
   const [endsAt, setEndsAt] = useState(null)
   // { ranking, solution, found, duration } once the game is over
   const [result, setResult] = useState(null)
+  // Lobby settings shared by the server: { mode, endRule, endDelay, isPublic, maxPlayers }
+  const [settings, setSettings] = useState(null)
+  // Set when the server refuses us (e.g. "room_full"): no reconnection then
+  const [joinError, setJoinError] = useState(null)
   // Coop only: { percent, contributions: { name: letters } } of the shared grid
   const [teamProgress, setTeamProgress] = useState(null)
   // Incremented on each new round so the page reloads the grid
@@ -73,6 +77,9 @@ const useWebSocket = (roomId, playerName) => {
           } else if (msg.type === "self_progress") {
             console.log("Ancienne progression retrouvé :", msg.progress)
             setProgress(msg.progress)
+          } else if (msg.type === "settings") {
+            const { type, ...rest } = msg
+            setSettings(rest)
           } else if (msg.type === "team_progress") {
             // Coop: the shared grid's found letters, applied like our own progress
             setProgress(msg.progress)
@@ -139,6 +146,10 @@ const useWebSocket = (roomId, playerName) => {
         console.log("WebSocket closed:", event.code, event.reason)
         wsRef.current = null
         if (stopped) return
+        if (event.code === 4000) {
+          setJoinError(event.reason || "error")
+          return
+        }
         // exponential backoff reconnect
         reconnectRef.current.attempts += 1
         const wait = Math.min(30000, 1000 * 2 ** reconnectRef.current.attempts)
@@ -185,8 +196,9 @@ const useWebSocket = (roomId, playerName) => {
     }
   }
 
-  // settings: { mode: "classic" | "coop", endRule: "first" | "all" | "delay", endDelay: seconds }
-  const startGame = (settings = {}) => send({ type: "start_game", ...settings })
+  // Owner only: the server validates, stores and broadcasts the new settings
+  const updateSettings = (changes) => send({ type: "update_settings", settings: changes })
+  const startGame = () => send({ type: "start_game" })
   const restartGame = () => send({ type: "restart_game" })
 
   return {
@@ -201,7 +213,10 @@ const useWebSocket = (roomId, playerName) => {
     endsAt,
     result,
     teamProgress,
+    settings,
+    joinError,
     round,
+    updateSettings,
     startGame,
     restartGame,
   }

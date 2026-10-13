@@ -56,7 +56,10 @@ export default function GamePage() {
     endsAt,
     result,
     teamProgress,
+    settings,
+    joinError,
     round,
+    updateSettings,
     startGame,
     restartGame,
   } = useWebSocket(
@@ -392,8 +395,8 @@ export default function GamePage() {
     setShowNameInput(false)
   }
 
-  const handleStartGame = (settings) => {
-    startGame(settings)
+  const handleStartGame = () => {
+    startGame()
   }
 
   const handleLeaveGame = () => {
@@ -423,6 +426,17 @@ export default function GamePage() {
   }
 
   // Update the return statement to conditionally render based on gamePhase:
+  if (joinError) {
+    return (
+      <div className="game-error">
+        <h2>{joinError === "room_full" ? t("roomFull") : t("joinFailed")}</h2>
+        <button className="btn btn-primary" onClick={() => navigate("/")}>
+          {t("backToHome")}
+        </button>
+      </div>
+    )
+  }
+
   if (gamePhase === "lobby" && showNameInput) {
     return (
       <div className="game-page">
@@ -449,7 +463,15 @@ export default function GamePage() {
 
   if (gamePhase === "lobby") {
     return (
-      <GameLobby roomId={roomId} onStartGame={handleStartGame} onLeaveGame={handleLeaveGame} isOwner={isGameOwner} players={players} />
+      <GameLobby
+        roomId={roomId}
+        onStartGame={handleStartGame}
+        onLeaveGame={handleLeaveGame}
+        isOwner={isGameOwner}
+        players={players}
+        settings={settings}
+        onChangeSettings={updateSettings}
+      />
     )
   }
 

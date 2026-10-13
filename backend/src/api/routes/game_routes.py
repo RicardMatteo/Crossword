@@ -69,13 +69,13 @@ async def get_public_games():
             "id": room_id,
             "owner": game.owner_name,
             "game_mode": game.__class__.__name__,
-            "playerCount": len(game.players),
-            "isRanked": game.is_ranked,
+            "playerCount": game.connected_count(),
+            "maxPlayers": game.max_players,
             "status": game.status.name
         }
         for room_id, game in GAMES.items()
         if game.is_public
         and game.status == GameStatus.WAITING_FOR_PLAYERS
-        and any(player.is_connected for player in game.players.values())
+        and 0 < game.connected_count() < game.max_players
     ]
     return JSONResponse(content=public_games, media_type="application/json; charset=utf-8")

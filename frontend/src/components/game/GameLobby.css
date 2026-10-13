@@ -62,10 +62,6 @@
   transition: all 0.3s ease;
 }
 
-.player-card.ready {
-  border-color: var(--success-color);
-  background: rgba(16, 185, 129, 0.1);
-}
 
 .player-info {
   display: flex;
@@ -82,15 +78,7 @@
   font-size: 1.2rem;
 }
 
-.ready-indicator {
-  color: var(--success-color);
-  font-weight: 600;
-}
 
-.not-ready-indicator {
-  color: var(--warning-color);
-  font-weight: 600;
-}
 
 .settings-grid {
   display: grid;
@@ -120,47 +108,11 @@
   font-size: 1rem;
 }
 
-.checkbox-group {
-  flex-direction: row;
-  align-items: center;
-}
 
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-weight: 500;
-}
 
-.checkbox-label input[type="checkbox"] {
-  display: none;
-}
 
-.checkmark {
-  width: 1.2rem;
-  height: 1.2rem;
-  border: 2px solid var(--border-color);
-  border-radius: 0.25rem;
-  position: relative;
-  transition: all 0.3s ease;
-}
 
-.checkbox-label input[type="checkbox"]:checked + .checkmark {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
-}
 
-.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
-  content: "✓";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 0.8rem;
-  font-weight: bold;
-}
 
 .lobby-actions {
   grid-column: 1 / -1;
@@ -229,4 +181,15 @@
   .settings-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.setting-select:disabled {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.setting-hint {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
 }

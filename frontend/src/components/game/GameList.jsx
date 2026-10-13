@@ -27,7 +27,7 @@ const GameList = ({ games, loading, onJoinGame, onRefresh, canJoin = true }) => 
               <div>
                 <span className="game-row-id">{game.id}</span>
                 <span className="game-row-meta">
-                  {game.owner} · {game.playerCount} {t("playersShort")}
+                  {game.owner} · {game.playerCount}/{game.maxPlayers} {t("playersShort")}
                 </span>
               </div>
               <button className="btn btn-primary" onClick={() => onJoinGame(game.id)} disabled={!canJoin}>

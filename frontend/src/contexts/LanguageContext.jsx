@@ -12,6 +12,13 @@ const LanguageContext = createContext()
 const translations = {
   fr: {
     // Game end
+    privacyPublic: "Public (listé sur l'accueil)",
+    privacyPrivate: "Privé (sur invitation)",
+    maxPlayers: "Joueurs max",
+    privateHint: "Salon privé : partagez le code ou le lien pour inviter des joueurs.",
+    waitingForOwnerStart: "En attente du lancement par le créateur…",
+    roomFull: "Ce salon est complet.",
+    joinFailed: "Impossible de rejoindre ce salon.",
     modeClassic: "Classique (chacun sa grille)",
     modeCoop: "Coop (grille commune)",
     modeInfo_coop: "Coop : tout le monde remplit la même grille.",
@@ -75,7 +82,6 @@ const translations = {
     gameSettings: "Paramètres de Jeu",
     gameMode: "Mode de Jeu",
     privacy: "Confidentialité",
-    ranked: "Classé",
     startGame: "Démarrer la Partie",
     waitingForPlayers: "En attente de joueurs...",
     playersInLobby: "Joueurs dans le salon",
@@ -111,6 +117,13 @@ const translations = {
   },
   en: {
     // Game end
+    privacyPublic: "Public (listed on the homepage)",
+    privacyPrivate: "Private (invite only)",
+    maxPlayers: "Max players",
+    privateHint: "Private room: share the code or link to invite players.",
+    waitingForOwnerStart: "Waiting for the host to start…",
+    roomFull: "This room is full.",
+    joinFailed: "Could not join this room.",
     modeClassic: "Classic (one grid each)",
     modeCoop: "Coop (shared grid)",
     modeInfo_coop: "Coop: everyone fills the same grid.",
@@ -174,7 +187,6 @@ const translations = {
     gameSettings: "Game Settings",
     gameMode: "Game Mode",
     privacy: "Privacy",
-    ranked: "Ranked",
     startGame: "Start Game",
     waitingForPlayers: "Waiting for players...",
     playersInLobby: "Players in lobby",
@@ -209,6 +221,13 @@ const translations = {
   },
   es: {
     // Game end
+    privacyPublic: "Pública (en la portada)",
+    privacyPrivate: "Privada (con invitación)",
+    maxPlayers: "Jugadores máx.",
+    privateHint: "Sala privada: comparte el código o el enlace para invitar.",
+    waitingForOwnerStart: "Esperando a que el anfitrión empiece…",
+    roomFull: "Esta sala está llena.",
+    joinFailed: "No se pudo entrar en la sala.",
     modeClassic: "Clásico (cada uno su cuadrícula)",
     modeCoop: "Coop (cuadrícula compartida)",
     modeInfo_coop: "Coop: todos rellenan la misma cuadrícula.",
@@ -272,7 +291,6 @@ const translations = {
     gameSettings: "Configuración del Juego",
     gameMode: "Modo de Juego",
     privacy: "Privacidad",
-    ranked: "Clasificado",
     startGame: "Iniciar Juego",
     waitingForPlayers: "Esperando jugadores...",
     playersInLobby: "Jugadores en la sala",
@@ -307,6 +325,13 @@ const translations = {
   },
   de: {
     // Game end
+    privacyPublic: "Öffentlich (auf der Startseite)",
+    privacyPrivate: "Privat (nur mit Einladung)",
+    maxPlayers: "Max. Spieler",
+    privateHint: "Privater Raum: Teile Code oder Link, um Spieler einzuladen.",
+    waitingForOwnerStart: "Warte auf den Start durch den Gastgeber…",
+    roomFull: "Dieser Raum ist voll.",
+    joinFailed: "Beitritt nicht möglich.",
     modeClassic: "Klassisch (jeder sein Rätsel)",
     modeCoop: "Koop (gemeinsames Rätsel)",
     modeInfo_coop: "Koop: Alle füllen dasselbe Rätsel aus.",
@@ -370,7 +395,6 @@ const translations = {
     gameSettings: "Spieleinstellungen",
     gameMode: "Spielmodus",
     privacy: "Privatsphäre",
-    ranked: "Gewertet",
     startGame: "Spiel Starten",
     waitingForPlayers: "Warte auf Spieler...",
     playersInLobby: "Spieler in der Lobby",
