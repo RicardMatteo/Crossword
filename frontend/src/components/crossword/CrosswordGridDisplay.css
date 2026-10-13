@@ -1,5 +1,4 @@
 .crossword-grid {
-  display: inline-block;
   margin-bottom: 2rem;
   border-radius: var(--border-radius);
   overflow: hidden;
@@ -9,15 +8,20 @@
   max-width: none;
 }
 
-.crossword-row {
-  display: flex;
-  width: 100%;
+/* One CSS grid for the whole crossword: every column has exactly the same
+   width whatever the cell contains, so the rows line up */
+.crossword-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
 }
 
-/* Every cell (input or clue) takes an equal share of the row and stays square */
+.crossword-row {
+  display: contents;
+}
+
 .crossword-row > * {
-  flex: 1 1 0;
   min-width: 0;
+  min-height: 0;
   aspect-ratio: 1;
 }
 
@@ -37,7 +41,8 @@
   height: auto !important;
 }
 
-/* Clue cells: FitText shrinks the font so whole words fit, never split mid-word */
+/* Clue cells: FitText shrinks the font so whole words fit, and splits long
+   words over several lines rather than going below a readable size */
 .clue-cell {
   display: flex;
   flex-direction: column;
@@ -58,6 +63,11 @@
   overflow-wrap: normal;
   hyphens: manual;
   line-height: 1.1;
+}
+
+/* Soft hyphens (added by FitText) first, anywhere as a last resort */
+.clue-text.is-broken {
+  overflow-wrap: anywhere;
 }
 
 .clue-text > span {
