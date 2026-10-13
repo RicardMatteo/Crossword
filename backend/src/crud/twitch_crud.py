@@ -1,15 +1,15 @@
 from core.database import database
 
 
-async def add_word(channel, login, display_name, letters):
-    """One more word found, uncovering `letters` new letters."""
+async def add_word(channel, login, display_name, letters, words):
+    """A word found, uncovering `letters` new letters and completing `words` words (crossings included)."""
     await database.execute(
         """INSERT INTO twitch_scores (channel, login, display_name, words, letters)
-           VALUES (:channel, :login, :name, 1, :letters)
+           VALUES (:channel, :login, :name, :words, :letters)
            ON CONFLICT (channel, login) DO UPDATE
-           SET words = twitch_scores.words + 1, letters = twitch_scores.letters + EXCLUDED.letters,
+           SET words = twitch_scores.words + EXCLUDED.words, letters = twitch_scores.letters + EXCLUDED.letters,
                display_name = EXCLUDED.display_name, updated_at = now()""",
-        values={"channel": channel, "login": login, "name": display_name, "letters": letters},
+        values={"channel": channel, "login": login, "name": display_name, "letters": letters, "words": words},
     )
 
 

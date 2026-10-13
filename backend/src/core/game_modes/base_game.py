@@ -115,9 +115,9 @@ class Game(ABC):
         self.twitch_status = None
         self.reset_progress()
 
-    def credit_viewer(self, viewer, word, letters):
+    def credit_viewer(self, viewer, word, letters, words):
         score = self.twitch_viewers.setdefault(viewer, {"words": 0, "letters": 0})
-        score["words"] += 1
+        score["words"] += words
         score["letters"] += letters
         self.twitch_feed.appendleft({"viewer": viewer, "word": word})
 

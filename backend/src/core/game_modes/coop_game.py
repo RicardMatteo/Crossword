@@ -26,13 +26,19 @@ class CoopGame(Game):
         return token
 
     async def validate_word(self, attempt):
+        complete_before = self.complete_words()
         for i in range(attempt.length):
             r = attempt.row if attempt.direction == "H" else attempt.row + i
             c = attempt.col + i if attempt.direction == "H" else attempt.col
             if attempt.guess[i] == self.grid["solution_grid"][r][c] and not self.progress[r][c]:
                 self.progress[r][c] = True
                 self.contributions[r][c] = attempt.token
-        self.found_words.setdefault(attempt.token, set()).add((attempt.row, attempt.col, attempt.direction))
+        # Credit every word this one completes, crossing words included
+        self.found_words.setdefault(attempt.token, set()).update(self.complete_words() - complete_before)
+
+    def complete_words(self):
+        return {(w["row"], w["col"], w["direction"]) for w in self.grid["placed_words"]
+                if all(self.progress[r][c] for r, c in self.word_cells(w))}
 
     def get_progress_for(self, token): # type: ignore
         return self.progress

@@ -174,14 +174,20 @@ async def on_twitch_message(room_id, viewer, text):
     for word in game.grid["placed_words"]:
         if word["word"] != guess or game.is_word_found(token, word):
             continue
-        # The viewer scores the letters still missing, not those already found
+        # Credit the viewer before applying: the last word ends the game and sends the results.
+        # They score the letters still missing and every word this one completes, crossings included.
         progress = game.get_progress_for(token)
-        letters = sum(not progress[r][c] for r, c in game.word_cells(word))
+        cells = set(game.word_cells(word))
+        letters = sum(not progress[r][c] for r, c in cells)
+        words = sum(
+            1 for w in game.grid["placed_words"]
+            if not game.is_word_found(token, w) and all(progress[r][c] or (r, c) in cells for r, c in game.word_cells(w))
+        )
+        game.credit_viewer(viewer, guess, letters, words)
         await apply_word(game, SimpleNamespace(
             room_id=room_id, token=token, guess=guess, length=word["length"],
             row=word["row"], col=word["col"], direction=word["direction"],
         ))
-        game.credit_viewer(viewer, guess, letters)
         await game.send_message_to_all(game.twitch_message())
         return  # one occurrence per message
 

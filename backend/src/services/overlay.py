@@ -87,7 +87,7 @@ class ChannelOverlay:
         return all(cell != "" for row in self.letters for cell in row if cell is not None)
 
     def fill(self, cells):
-        """Writes the solution in `cells`; returns how many of them were still empty."""
+        """Writes the solution in `cells`; returns (letters that were still empty, words completed)."""
         solution = self.grid["solution_grid"]
         new = 0
         for r, c in cells:
@@ -95,10 +95,12 @@ class ChannelOverlay:
                 new += 1
             self.letters[r][c] = solution[r][c]
         # Crossing words may now be complete too
+        words = 0
         for i, word in enumerate(self.grid["placed_words"]):
             if i not in self.found_words and all(self.letters[r][c] for r, c in word_cells(word)):
                 self.found_words.add(i)
-        return new
+                words += 1
+        return new, words
 
     async def finish(self):
         self.status = "finished"
@@ -131,14 +133,14 @@ class ChannelOverlay:
         else:
             return
         # Viewers score the letters they uncover, not those already revealed by hints or crossing words
-        letters = self.fill(word_cells(word))
+        letters, words = self.fill(word_cells(word))
         self.last_progress = time.monotonic()
         entry = self.viewers.setdefault(login, {"name": viewer, "words": 0, "letters": 0})
-        entry["words"] += 1
+        entry["words"] += words
         entry["letters"] += letters
         self.feed.appendleft({"viewer": viewer, "word": guess})
         try:
-            await twitch_crud.add_word(self.channel, login, viewer, letters)
+            await twitch_crud.add_word(self.channel, login, viewer, letters, words)
             self.top_all_time = await twitch_crud.top_viewers(self.channel, TOP_SIZE)
         except Exception as e:
             print(f"Overlay #{self.channel}: error saving score: {e!r}")

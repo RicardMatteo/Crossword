@@ -115,15 +115,7 @@ const clueShare = (text) => text.length + 12
 function ClueCell({ clues, definitionMap }) {
   const isDouble = clues?.length === 2
 
-  // Helper to get definition, trying V/H swap if not found
-  function getDefinition(clue) {
-    const clueStr = clue?.toString()
-    if (!clueStr) return ""
-    if (definitionMap[clueStr]) return definitionMap[clueStr]
-    // Try swapping last char V<->H
-    const swapped = clueStr.endsWith("V") ? clueStr.slice(0, -1) + "H" : clueStr.slice(0, -1) + "V"
-    return definitionMap[swapped] || `Not Found, ${clue}`
-  }
+  const getDefinition = (key) => definitionMap[key] ?? ""
 
   return (
     <div

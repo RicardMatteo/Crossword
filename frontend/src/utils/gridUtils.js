@@ -32,30 +32,43 @@ export function generateArrowMap(arrowMapInit, placedWords) {
 }
 
 /**
- * Display data of a grid from the API: `cells` ("" for a letter cell, null for a
- * clue cell), clue numbers per clue cell, clue texts by "<number><direction>" and arrows
+ * Clue cell defining a word: the one just before its first letter in its own
+ * direction (left of an H word, above a V word), otherwise the other neighbour
+ * (arrow turning: above an H word, left of a V word).
  */
-export function buildGridView({ grid_structure, grid_def_order, placed_words }) {
+function clueCellOf(word, isClue) {
+  const { row, col, direction } = word
+  const inLine = direction === "H" ? [row, col - 1] : [row - 1, col]
+  const turning = direction === "H" ? [row - 1, col] : [row, col - 1]
+  return isClue(...inLine) ? inLine : turning
+}
+
+/**
+ * Display data of a grid from the API: `cells` ("" for a letter cell, null for a
+ * clue cell), clue keys per clue cell (top first), clue texts by key and arrows.
+ * Clues are placed from the words' positions: the word numbers are not reliable
+ * (two neighbouring words may be numbered either way round).
+ */
+export function buildGridView({ grid_structure, placed_words }) {
   const cells = grid_structure.map((row) => row.split("").map((c) => (c === "-" ? "" : null)))
   const arrowMap = generateArrowMap(
     grid_structure.map((row) => row.split("").map(() => "")),
     placed_words,
   )
+  const isClue = (r, c) => cells[r]?.[c] === null
 
   const clueOrder = grid_structure.map((row) => row.split("").map(() => null))
-  let clueIndex = 0
-  grid_structure.forEach((line, row) => {
-    for (let col = 0; col < line.length; col++) {
-      if (line[col] === "/" || line[col] === "#") {
-        clueOrder[row][col] = grid_def_order[clueIndex]
-        clueIndex++
-      }
-    }
-  })
-
   const definitionMap = {}
   placed_words.forEach((word) => {
-    definitionMap[`${word.number}${word.direction}`] = word.clue
+    const key = `${word.row},${word.col},${word.direction}`
+    definitionMap[key] = word.clue
+    const [r, c] = clueCellOf(word, isClue)
+    if (!isClue(r, c)) return
+    // Top half: the word starting to the right; bottom half: the word starting below
+    const startsRight = word.row === r && word.col === c + 1
+    const slots = (clueOrder[r][c] ??= [])
+    if (startsRight) slots.unshift(key)
+    else slots.push(key)
   })
 
   return { cells, arrowMap, clueOrder, definitionMap }
