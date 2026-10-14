@@ -32,6 +32,7 @@ class Game(ABC):
         """
         self.room_id = room_id
         self.grid = grid
+        self.played_grids = {grid["id"]} if grid.get("id") else set()  # ids, to avoid replaying a grid
         self.players = {}
         self.owner = owner
         self.status = GameStatus.WAITING_FOR_PLAYERS
@@ -150,7 +151,7 @@ class Game(ABC):
 
     def copy_settings_from(self, other):
         for attr in ("is_public", "max_players", "next_mode", "end_rule", "end_delay",
-                     "twitch_channel", "twitch_status", "twitch_feed", "twitch_viewers"):
+                     "twitch_channel", "twitch_status", "twitch_feed", "twitch_viewers", "played_grids"):
             setattr(self, attr, getattr(other, attr))
 
     async def update_settings(self, settings):

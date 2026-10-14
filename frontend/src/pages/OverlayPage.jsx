@@ -11,6 +11,25 @@ import "./OverlayPage.css"
 
 const LEADERBOARD_SWITCH_MS = 10000
 const HINT_COUNTDOWN_FROM = 30 // show the countdown to the next revealed letter below this many seconds
+const HIGHLIGHT_MS = 3000 // how long a word just found stays highlighted
+
+/** Words found in the last few seconds (ids from the server), to highlight them on stream */
+function useJustFound(recent, now) {
+  const seen = useRef(null) // id -> time it was first received
+  if (!recent) return []
+  if (!seen.current) {
+    // Page (re)loaded: the words already found are not news
+    seen.current = new Map(recent.map((entry) => [entry.id, 0]))
+  }
+  const fresh = []
+  const ids = new Set(recent.map((entry) => entry.id))
+  for (const id of seen.current.keys()) if (!ids.has(id)) seen.current.delete(id)
+  for (const entry of recent) {
+    if (!seen.current.has(entry.id)) seen.current.set(entry.id, Date.now())
+    if (now - seen.current.get(entry.id) < HIGHLIGHT_MS) fresh.push(entry)
+  }
+  return fresh
+}
 
 /** Live state of the channel's chat-only game, reconnecting forever (OBS sources stay open for hours) */
 function useOverlayState(channel, restart) {
@@ -78,6 +97,7 @@ export default function OverlayPage() {
   const { t } = useLanguage()
   const { state, error } = useOverlayState(channel, params.get("restart"))
   const now = useNow()
+  const justFound = useJustFound(state?.recent, now)
   const transparent = params.get("bg") === "transparent"
   const theme = params.get("theme")
 
@@ -118,7 +138,7 @@ export default function OverlayPage() {
 
   return (
     <div className={`overlay ${transparent ? "is-transparent" : ""}`} data-theme={theme || undefined}>
-      <OverlayGrid key={state.round} view={view} state={state} />
+      <OverlayGrid key={state.round} view={view} state={state} justFound={justFound} />
 
       <aside className="overlay-side">
         <header className="overlay-panel overlay-header">
@@ -132,6 +152,14 @@ export default function OverlayPage() {
               <strong>{t("overlayGridDone").replace("{time}", formatTime(state.duration))}</strong>
               <span className="overlay-next">{t("overlayNextGrid").replace("{s}", restartIn)}</span>
             </>
+          ) : justFound[0] ? (
+            // The word just found replaces the call to play for a few seconds
+            <div className="overlay-just-found" key={justFound[0].id}>
+              <span>
+                ✨ <strong>{justFound[0].viewer}</strong> {t("overlayFoundWord")}
+              </span>
+              <span className="overlay-just-found-word">{justFound[0].word}</span>
+            </div>
           ) : (
             <>
               <strong>{t("overlayCta")}</strong>
@@ -204,7 +232,7 @@ export default function OverlayPage() {
 }
 
 /** Read-only grid scaled to fit the space left by the side panel */
-function OverlayGrid({ view, state }) {
+function OverlayGrid({ view, state, justFound }) {
   const areaRef = useRef(null)
   const [width, setWidth] = useState(0)
   const rows = view.cells.length
@@ -223,13 +251,19 @@ function OverlayGrid({ view, state }) {
   if (!inputRefs.current) inputRefs.current = view.cells.map((row) => row.map(() => React.createRef()))
 
   const revealed = new Set(state.revealed.map(([r, c]) => `${r},${c}`))
+  const flashing = new Set(justFound.flatMap((entry) => entry.cells.map(([r, c]) => `${r},${c}`)))
   const cellStatus = state.letters.map((row, r) =>
-    row.map((cell, c) => (cell === null ? null : revealed.has(`${r},${c}`) ? "revealed" : cell ? "found" : "empty")),
+    row.map((cell, c) => {
+      if (cell === null) return null
+      if (flashing.has(`${r},${c}`)) return "just-found"
+      return revealed.has(`${r},${c}`) ? "revealed" : cell ? "found" : "empty"
+    }),
   )
 
   return (
     <div className="overlay-grid-area" ref={areaRef}>
       <div className="overlay-grid" style={{ width }}>
+
         <CrosswordGridDisplay
           gridStructure={view.cells}
           inputGrid={state.letters}

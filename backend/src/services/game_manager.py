@@ -51,8 +51,12 @@ def apply_mode(game) -> Game:
 
 async def restart_room(game) -> None:
     """Start a new round in the same room with a fresh grid."""
-    grid = await get_random_grid()
+    # No grid twice in the same room until they have all been played
+    grid = await get_random_grid(exclude=game.played_grids)
     if grid:
+        if grid["id"] in game.played_grids:
+            game.played_grids.clear()
+        game.played_grids.add(grid["id"])
         await game.reset(normalize_grid(grid))
 
 

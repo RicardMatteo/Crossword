@@ -11,7 +11,7 @@ import time
 from collections import deque
 
 from crud import twitch_crud
-from crud.game_crud import get_random_grid
+from crud.game_crud import get_grid_for_channel
 from services.twitch_chat import TwitchChat, chat_word
 from utils.normalize import normalize_grid
 
@@ -42,6 +42,7 @@ class ChannelOverlay:
         self.chat_status = "connecting"
         self.top_all_time = []
         self.round = 0
+        self.found_count = 0  # ids for the highlight of found words
         self.status = None  # "playing" or "finished"
         self.tasks = []
         self.restart_task = None
@@ -62,7 +63,8 @@ class ChannelOverlay:
     # --- rounds ---------------------------------------------------------------
 
     async def new_round(self):
-        grid = await get_random_grid()
+        # Least recently played on this channel: no repeat before every grid has been played
+        grid = await get_grid_for_channel(self.channel)
         if not grid:
             print(f"Overlay #{self.channel}: no grid available")
             return
@@ -73,6 +75,7 @@ class ChannelOverlay:
         self.revealed = set()  # cells filled by a hint rather than by a viewer
         self.found_words = set()  # indexes in placed_words
         self.feed = deque(maxlen=FEED_SIZE)
+        self.recent = deque(maxlen=5)  # last words found, with their cells, for the highlight
         self.viewers = {}  # login -> {"name", "words"} for this grid
         self.round += 1
         self.status = "playing"
@@ -139,6 +142,9 @@ class ChannelOverlay:
         entry["words"] += words
         entry["letters"] += letters
         self.feed.appendleft({"viewer": viewer, "word": guess})
+        self.found_count += 1
+        self.recent.appendleft({"id": self.found_count, "viewer": viewer, "word": guess,
+                                "cells": list(word_cells(word))})
         try:
             await twitch_crud.add_word(self.channel, login, viewer, letters, words)
             self.top_all_time = await twitch_crud.top_viewers(self.channel, TOP_SIZE)
@@ -219,6 +225,7 @@ class ChannelOverlay:
             "wordsFound": len(self.found_words),
             "totalWords": len(self.grid["placed_words"]),
             "feed": list(self.feed),
+            "recent": list(self.recent),
             "topGame": top_game,
             "topAllTime": self.top_all_time,
             "nextHintIn": self.next_hint_in(),

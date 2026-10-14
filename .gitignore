@@ -326,3 +326,6 @@ pyrightconfig.json
 *.sql.dump
 db_dump_all*.sql
 *.zip
+
+# Claude Code agent worktrees
+.claude/worktrees/

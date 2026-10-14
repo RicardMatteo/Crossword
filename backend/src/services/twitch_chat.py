@@ -11,6 +11,12 @@ import websockets
 IRC_URL = os.getenv("TWITCH_IRC_URL", "wss://irc-ws.chat.twitch.tv:443")
 MAX_RETRY_DELAY = 60
 CHANNEL_RE = re.compile(r"^[a-z0-9_]{3,25}$")
+# Common chat bots: their one-word messages (commands, alerts) must not play
+BOT_LOGINS = {
+    "nightbot", "streamelements", "streamlabs", "moobot", "fossabot", "wizebot", "sery_bot",
+    "soundalerts", "botisimo", "deepbot", "coebot", "phantombot", "ankhbot", "vivbot",
+    "commanderroot", "pokemoncommunitygame", "kofistreambot", "streamstickers", "blerp",
+}
 
 
 def chat_word(text):
@@ -95,6 +101,8 @@ class TwitchChat:
                 return "reconnect"
             elif command == "PRIVMSG" and trailing:
                 login = prefix.split("!", 1)[0]
+                if login in BOT_LOGINS:
+                    continue
                 viewer = tags.get("display-name") or login
                 try:
                     await self.on_message(viewer, trailing, login)

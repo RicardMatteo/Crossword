@@ -145,7 +145,12 @@ function ClueCell({ clues, definitionMap }) {
  * Input cell component for crossword letters
  * Handles user input, focus states, and directional arrows
  */
-const statusColors = { found: "var(--success-color)", missed: "var(--danger-color)", revealed: "var(--warning-color)" }
+const statusColors = {
+  found: "var(--success-color)",
+  "just-found": "var(--success-color)",
+  missed: "var(--danger-color)",
+  revealed: "var(--warning-color)",
+}
 
 function InputCell({ cell, rowIndex, colIndex, inputRefs, handleKeyDown, onFocus, isInWord, isFocused, arrow, status }) {
   return (
@@ -165,6 +170,7 @@ function InputCell({ cell, rowIndex, colIndex, inputRefs, handleKeyDown, onFocus
         }}
         onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
         onClick={() => onFocus(rowIndex, colIndex)}
+        className={status === "just-found" ? "cell-just-found" : undefined}
         style={{
           ...cellStyle,
           padding: 0,

@@ -50,6 +50,14 @@ SCHEMA = [
         PRIMARY KEY (channel, login)
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS overlay_grids (
+        channel VARCHAR(25) NOT NULL,
+        grid_id INTEGER NOT NULL REFERENCES grid_template(id) ON DELETE CASCADE,
+        played_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        PRIMARY KEY (channel, grid_id)
+    )
+    """,
     # added after the table's creation
     "ALTER TABLE twitch_scores ADD COLUMN IF NOT EXISTS letters INTEGER NOT NULL DEFAULT 0",
 ]

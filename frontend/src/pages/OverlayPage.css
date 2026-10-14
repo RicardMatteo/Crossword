@@ -203,3 +203,34 @@ ol.overlay-list li span:first-child {
   min-height: 0;
   overflow: hidden;
 }
+
+/* "<viewer> found <WORD>" in place of the call to play */
+.overlay-just-found {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3vh;
+  animation: overlay-just-found 0.4s ease-out;
+}
+
+.overlay-just-found span {
+  font-size: clamp(1rem, 1.3vw, 1.6rem);
+  opacity: 1;
+}
+
+.overlay-just-found .overlay-just-found-word {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2.4vw, 3rem);
+  letter-spacing: 0.1em;
+}
+
+@keyframes overlay-just-found {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

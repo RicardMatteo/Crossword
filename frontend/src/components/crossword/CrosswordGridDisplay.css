@@ -125,3 +125,20 @@
     font-size: 0.7rem;
   }
 }
+
+/* A word just found (stream overlay): the cells flash, then settle */
+.cell-just-found {
+  animation: cell-just-found 3s ease-out;
+  font-weight: 700;
+}
+
+@keyframes cell-just-found {
+  0%,
+  40% {
+    background-color: #9146ff;
+    color: white;
+  }
+  100% {
+    background-color: var(--bg-primary);
+  }
+}
