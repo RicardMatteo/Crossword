@@ -20,9 +20,11 @@ async def overlay_endpoint(websocket: WebSocket, channel: str, restart: int | No
         await websocket.close(code=4000, reason="invalid_channel")
         return
     restart = min(max(restart, 5), 600) if restart is not None else None
-    await join_overlay(channel, websocket, restart)
     try:
+        await join_overlay(channel, websocket, restart)
         while True:
             await websocket.receive_text()
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, RuntimeError):
+        pass  # RuntimeError: the page closed while a state was being sent
+    finally:
         await leave_overlay(channel, websocket)
