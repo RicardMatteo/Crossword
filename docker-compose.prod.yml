@@ -1,0 +1,53 @@
+# Stack de production (Komodo). Le compose de dev reste docker-compose.yml.
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Variables (dans l'onglet Environment de la stack Komodo, ou un .env à côté) :
+#   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB   obligatoires
+#   FRONT_PORT                                      port publié du site (8080 par défaut)
+#
+# Seul le front est exposé, en HTTP : le HTTPS est attendu d'un reverse proxy
+# devant la stack (qui doit laisser passer les WebSockets sur /ws/).
+services:
+  crossword-db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?POSTGRES_USER manquant}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant}
+      - POSTGRES_DB=${POSTGRES_DB:?POSTGRES_DB manquant}
+    volumes:
+      - crossword-db-data:/var/lib/postgresql/data
+      # Grilles : chargées seulement si le volume est vide (premier démarrage)
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro,z
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  crossword-backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      crossword-db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@crossword-db:5432/${POSTGRES_DB}
+      - TWITCH_IRC_URL=${TWITCH_IRC_URL:-wss://irc-ws.chat.twitch.tv:443}
+    # Sans rechargement et en un seul processus : les parties sont gardées en mémoire
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000",
+              "--proxy-headers", "--forwarded-allow-ips", "*"]
+
+  crossword-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    depends_on:
+      - crossword-backend
+    ports:
+      - ${FRONT_PORT:-8080}:80
+
+volumes:
+  crossword-db-data:
