@@ -1,0 +1,75 @@
+.twitch-status {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.twitch-status-connected {
+  color: var(--success-color);
+}
+
+.twitch-status-disconnected {
+  color: var(--danger-color);
+}
+
+.twitch-panel {
+  margin-bottom: 1rem;
+  border-left: 4px solid #9146ff;
+}
+
+.twitch-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.twitch-panel-header .twitch-channel {
+  font-weight: 600;
+  color: #9146ff;
+}
+
+.twitch-panel h5 {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.twitch-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.twitch-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  color: var(--text-primary);
+}
+
+.twitch-list .twitch-word {
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.twitch-empty {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.twitch-score {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.twitch-score small {
+  margin-left: 0.3em;
+  font-weight: 400;
+  color: var(--text-secondary);
+}

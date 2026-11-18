@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from services.websocket_manager import get_room, validate_word
+from services.game_manager import GAMES, get_room, validate_word
+from utils.game_status import GameStatus
 import json
 
 router = APIRouter()
@@ -17,15 +18,15 @@ class WordAttempt(BaseModel):
 
 @router.get("/api/grid")
 async def get_grid(room_id: str):
-    room = await get_room(room_id)
-    if not room:
+    game = await get_room(room_id)
+    if not game:
         return JSONResponse(status_code=404, content={"error": "Room not found"})
     
 
     with open("./src/utils/grid_def_order.json", "r") as f:
         grid_def_order = json.load(f)
 
-    game_data = room["grid"]
+    game_data = game.grid
     return JSONResponse(content={
         "grid_structure": game_data["grid_structure"],
         "grid_def_order": grid_def_order["grid_def_order"],
@@ -36,11 +37,13 @@ async def get_grid(room_id: str):
     
 @router.post("/api/submit_word")
 async def submit_word(attempt: WordAttempt):
-    room = await get_room(attempt.room_id)
-    if not room:
+    game = await get_room(attempt.room_id)
+    if not game:
         return JSONResponse(status_code=404, content={"error": "Room not found"})
+    if game.status != GameStatus.IN_PROGRESS or attempt.token not in game.players:
+        return {"valid": False, "error": "Game not in progress"}
     
-    game_data = room["grid"]    
+    game_data = game.grid  
     for word in game_data["placed_words"]:
         if (word["row"], word["col"], word["direction"]) == (attempt.row, attempt.col, attempt.direction):
             # Vérification du mot
@@ -50,3 +53,29 @@ async def submit_word(attempt: WordAttempt):
                 await validate_word(attempt)  
                 return {"valid": True}
     return {"error": "Unknown word location"}
+
+
+    """public_games = get_public_games()
+    if not public_games:
+        return JSONResponse(status_code=404, content={"error": "No public games found"})
+    return JSONResponse(content=public_games, media_type="application/json; charset=utf-8")
+"""
+
+@router.get("/api/public_games")
+async def get_public_games():
+    """Retrieve a list of public games."""
+    public_games = [
+        {
+            "id": room_id,
+            "owner": game.owner_name,
+            "game_mode": game.__class__.__name__,
+            "playerCount": game.connected_count(),
+            "maxPlayers": game.max_players,
+            "status": game.status.name
+        }
+        for room_id, game in GAMES.items()
+        if game.is_public
+        and game.status == GameStatus.WAITING_FOR_PLAYERS
+        and 0 < game.connected_count() < game.max_players
+    ]
+    return JSONResponse(content=public_games, media_type="application/json; charset=utf-8")

@@ -1,22 +1,7 @@
 from fastapi import WebSocket, WebSocketDisconnect
-import uuid
-import hashlib
-from crud.game_crud import get_random_grid
-from utils.normalize import normalize_grid
-
-ROOMS = {}
-
-async def get_room(room_id):
-    if room_id not in ROOMS:
-        ROOMS[room_id] = {
-            "players": {},
-            "names": {},
-            "progress": {},
-            "is_connected": {},
-            "grid":  normalize_grid(await get_random_grid()),
-        }
-
-    return ROOMS[room_id]
+from services.game_manager import GAMES, join_room, restart_room, apply_mode, link_twitch, stop_twitch
+from crud.user_crud import get_session_user
+from utils.game_status import GameStatus
 
 async def handle_websocket(websocket: WebSocket, room_id: str):
     await websocket.accept()
@@ -25,128 +10,46 @@ async def handle_websocket(websocket: WebSocket, room_id: str):
     except WebSocketDisconnect:
         return
 
-    token = init.get("token")
-    name = init.get("name")
+    user = await get_session_user(init.get("authToken"))
+    join = await join_room(room_id, websocket, init.get("name"), init.get("token"), user)
+    if "error" in join:
+        await websocket.close(code=4000, reason=join["error"])
+        return
 
-    room = await get_room(room_id)
-
-    if not token or token not in room["players"]:
-        if not name:
-            await websocket.close(code=1008)
-            return
-        print(f"New player in room {room_id} with token {token}")
-        token = f"{room_id}-{uuid.uuid4()}"
-        room["names"][token] = name
-        room["progress"][token] = [[False if c == '-' else None for c in row] for row in room["grid"]["grid_structure"]]
-        room["is_connected"][token] = True
-
-    else:
-        print(f"Reconnecting player {name} with token {token} in room {room_id}")
-        if not name:
-            name = room["names"].get(token, f"Player-{token[-4:]}")
-        room["is_connected"][token] = True
-        # print progress for this player
-        print(f"Progression de {name} :")
-        for row in room["progress"][token]:
-            print(" ".join(['#' if c else '-' for c in row]))
-
-    room["players"][token] = websocket
-    room["is_connected"][token] = True
-
-    await websocket.send_json({"type": "token", "token": token, "room_id": room_id})
-
-    for other_token, progress in room["progress"].items():
-        if not room["is_connected"].get(other_token):
-            continue
-        if other_token != token:
-            await websocket.send_json({"type": "player_progress", "from": room["names"][other_token], "progress": progress})
-            await room["players"][other_token].send_json({"type": "player_progress", "from": name, "progress": room["progress"][token]})
-
-    # Pour le joueur on renvoit les lettres bien placées
-    # Build self_progress: show the letter if validated, else None
-    self_progress = [
-        [
-            room["grid"]["solution_grid"][r][c] if room["progress"][token][r][c] == True else None
-            for c in range(len(room["grid"]["grid_structure"][0]))
-        ]
-        for r in range(len(room["grid"]["grid_structure"]))
-    ]
-    await websocket.send_json({"type": "self_progress", "progress": self_progress})
+    game = join["room"]
+    # Use the token assigned by join_room: a new player arrives without one
+    token = join["token"]
 
     try:
         while True:
             msg = await websocket.receive_json()
-            if msg["type"] == "word_validated":
-                row, col = msg["row"], msg["col"]
-                direction, length = msg["direction"], msg["length"]
+            msg_type = msg.get("type")
+            # The room's game object is replaced when its mode changes
+            game = GAMES.get(room_id, game)
 
-                for i in range(length):
-                    r = row if direction == "H" else row + i
-                    c = col + i if direction == "H" else col
-                    room["progress"][token][r][c] = True
-
-                await send_message_to_all_except(room, token, {
-                    "type": "player_progress",
-                    "from": name,
-                    "progress": room["progress"][token]
-                })
+            if msg_type == "request_players":
+                await websocket.send_json(game.players_message())
+            elif msg_type == "update_settings":
+                if token == game.owner:
+                    await game.update_settings(msg.get("settings") or {})
+            elif msg_type == "link_twitch":
+                if token == game.owner:
+                    await link_twitch(game, msg.get("channel"))
+            elif msg_type == "start_game":
+                if token == game.owner and game.status == GameStatus.WAITING_FOR_PLAYERS:
+                    game = apply_mode(game)
+                    await game.start()
+            elif msg_type == "restart_game":
+                if token == game.owner and game.status == GameStatus.COMPLETED:
+                    await restart_room(game)
 
     except WebSocketDisconnect:
-        if token in room["players"]:
-            room["is_connected"][token] = False
-            await send_message_to_all_except(room, token, {
-                "type": "player_disconnected",
-                "from": name
-            })
-
-async def send_message_to_all_except(room, sender_token, message):
-    for token, player in room["players"].items():
-        if token != sender_token and room["is_connected"].get(token, False):
-            try:
-                await player.send_json(message)
-            except Exception as e:
-                print(f"Error sending message to player {token}: {e}")
-
-async def send_message_to_all(room, message):
-    await send_message_to_all_except(room, None, message)
-
-
-async def validate_word(attempt):
-    """Méthode pour marquer un mot comme validé."""
-    row, col = attempt.row, attempt.col
-    direction = attempt.direction
-    room = await get_room(attempt.room_id)
-    if room is None:
-        print(f"Room not found for room_id {attempt.room_id}")
-        return
-    
-    length = attempt.length
-    token = attempt.token
-    room = next((r for r in ROOMS.values() if token in r["players"]), None)
-    if room is None:
-        print(f"Room not found for token {token}")
-        return
-    
-    for i in range(length):
-        r = row if direction == "H" else row + i
-        c = col + i if direction == "H" else col
-        
-        if attempt.guess[i] == room["grid"]["solution_grid"][r][c]:
-            room["progress"][token][r][c] = True
-        else:       
-            print(f"Invalid word attempt: {attempt.guess[i]} at ({r}, {c})")        
-    
-    print(f"Progression de {room['names'][token]} :")
-    for row in room["progress"][token]:
-        print(" ".join(['#' if c else '-' for c in row]))
-
-    await send_message_to_all_except(
-        room,
-        token,
-        {
-            "type": "player_progress",
-            "from": room["names"][token],
-            "progress": room["progress"][token]
-        }
-    )
-
+        game = GAMES.get(room_id, game)
+        player = game.players.get(token)
+        # Ignore stale sockets: the player may already have reconnected elsewhere
+        if player and player.websocket is websocket:
+            player.disconnect()
+            await game.on_player_left(token)
+            # Nobody left to watch: stop reading the chat (restarted when someone comes back)
+            if game.connected_count() == 0:
+                stop_twitch(room_id)

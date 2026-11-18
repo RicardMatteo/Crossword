@@ -1,0 +1,508 @@
+{
+    "grid_structure": [
+        "/-/-/-/-#-/-/-",
+        "--------/-----",
+        "/--/-------/--",
+        "------/---/---",
+        "#/---/---/----",
+        "-------------#",
+        "/--/---/---/--",
+        "----/---------",
+        "#----#---#----"
+    ],
+    "grid_def_order": [
+        [1, 8],
+        [2, 9],
+        [3, 10],
+        [4, 11],
+        [5],
+        [6, 13],
+        [7, 14],
+        [17, 12],
+        [19, 15],
+        [20, 16],
+        [22, 18],
+        [24, 21],
+        [22, 25],
+        [26],
+        [27, 23],
+        [28, 24],
+        [29, 25],
+        [34],
+        [30],
+        [36, 31],
+        [38, 32],
+        [39, 33],
+        [37],
+        [40],
+        [41],
+        [42]
+    ],
+    "solution_grid": [
+        "#S#N#R#F#C#H#U",
+        "SINECURE#ABERS",
+        "#LE#REPOSER#EN",
+        "POTEES#DAN#OSE",
+        "##TAU#RAI#ESSE",
+        "EMOUSTILLANTE#",
+        "#II#AOC#LIT#NS",
+        "ETEL#MIDINETTE",
+        "#ESAU#NOE#EPIE"
+    ],
+    "placed_words": [
+        {
+            "word": "SILO",
+            "clue": "IL VEILLE AU GRAIN",
+            "row": 0,
+            "col": 1,
+            "direction": "V",
+            "length": 4,
+            "number": 1
+        },
+        {
+            "word": "NE",
+            "clue": "ARRIVÉ APRÈS AVOIR ÉTÉ ATTENDU",
+            "row": 0,
+            "col": 3,
+            "direction": "V",
+            "length": 2,
+            "number": 2
+        },
+        {
+            "word": "RUES",
+            "clue": "PASSAGES URBAINS",
+            "row": 0,
+            "col": 5,
+            "direction": "V",
+            "length": 4,
+            "number": 3
+        },
+        {
+            "word": "FEODAL",
+            "clue": "QUI DATE !",
+            "row": 0,
+            "col": 7,
+            "direction": "V",
+            "length": 6,
+            "number": 4
+        },
+        {
+            "word": "CAEN",
+            "clue": "VILLE DU CALVADOS",
+            "row": 0,
+            "col": 9,
+            "direction": "V",
+            "length": 4,
+            "number": 5
+        },
+        {
+            "word": "HE",
+            "clue": "L'HÉLIUM",
+            "row": 0,
+            "col": 11,
+            "direction": "V",
+            "length": 2,
+            "number": 6
+        },
+        {
+            "word": "USNEE",
+            "clue": "LICHEN FILAMENTEUX",
+            "row": 0,
+            "col": 13,
+            "direction": "V",
+            "length": 5,
+            "number": 7
+        },
+        {
+            "word": "SINECURE",
+            "clue": "EMPLOI TRÈS RECHERCHÉ",
+            "row": 1,
+            "col": 0,
+            "direction": "H",
+            "length": 8,
+            "number": 8
+        },
+        {
+            "word": "NETTOIES",
+            "clue": "DONNES UN COUP DE BALAI",
+            "row": 1,
+            "col": 2,
+            "direction": "V",
+            "length": 8,
+            "number": 9
+        },
+        {
+            "word": "CREUSA",
+            "clue": "APPROFONDIT",
+            "row": 1,
+            "col": 4,
+            "direction": "V",
+            "length": 6,
+            "number": 10
+        },
+        {
+            "word": "RP",
+            "clue": "LETTRES DEVANT UN PRÊTRE",
+            "row": 1,
+            "col": 6,
+            "direction": "V",
+            "length": 2,
+            "number": 11
+        },
+        {
+            "word": "ABERS",
+            "clue": "ESTUAIRES BRETONS",
+            "row": 1,
+            "col": 9,
+            "direction": "H",
+            "length": 5,
+            "number": 12
+        },
+        {
+            "word": "BR",
+            "clue": "BROME ABRÉGÉ",
+            "row": 1,
+            "col": 10,
+            "direction": "V",
+            "length": 2,
+            "number": 13
+        },
+        {
+            "word": "RESSENTI",
+            "clue": "ÉPROUVÉ AVEC ÉMOTION",
+            "row": 1,
+            "col": 12,
+            "direction": "V",
+            "length": 8,
+            "number": 14
+        },
+        {
+            "word": "LE",
+            "clue": "ARTICLE COURANT",
+            "row": 2,
+            "col": 1,
+            "direction": "H",
+            "length": 2,
+            "number": 15
+        },
+        {
+            "word": "REPOSER",
+            "clue": "DÉLASSER",
+            "row": 2,
+            "col": 4,
+            "direction": "H",
+            "length": 7,
+            "number": 16
+        },
+        {
+            "word": "SAILLIE",
+            "clue": "PARTIE QUI AVANCE",
+            "row": 2,
+            "col": 8,
+            "direction": "V",
+            "length": 7,
+            "number": 17
+        },
+        {
+            "word": "EN",
+            "clue": "PRÉCISE L'ÉPOQUE",
+            "row": 2,
+            "col": 12,
+            "direction": "H",
+            "length": 2,
+            "number": 18
+        },
+        {
+            "word": "POTEES",
+            "clue": "PLATS RURAUX",
+            "row": 3,
+            "col": 0,
+            "direction": "H",
+            "length": 6,
+            "number": 19
+        },
+        {
+            "word": "EAU",
+            "clue": "ELLE REMPLIT LE SEAU",
+            "row": 3,
+            "col": 3,
+            "direction": "V",
+            "length": 3,
+            "number": 20
+        },
+        {
+            "word": "DAN",
+            "clue": "NIVEAU SUR UN TATAMI",
+            "row": 3,
+            "col": 7,
+            "direction": "H",
+            "length": 3,
+            "number": 21
+        },
+        {
+            "word": "OST",
+            "clue": "ARMÉE DE L'ÉPOQUE FÉODALE",
+            "row": 3,
+            "col": 11,
+            "direction": "V",
+            "length": 3,
+            "number": 22
+        },
+        {
+            "word": "OSE",
+            "clue": "EST VOLONTAIRE",
+            "row": 3,
+            "col": 11,
+            "direction": "H",
+            "length": 3,
+            "number": 22
+        },
+        {
+            "word": "TAU",
+            "clue": "T GREC",
+            "row": 4,
+            "col": 2,
+            "direction": "H",
+            "length": 3,
+            "number": 23
+        },
+        {
+            "word": "RICIN",
+            "clue": "PLANTE PURGATIVE",
+            "row": 4,
+            "col": 6,
+            "direction": "V",
+            "length": 5,
+            "number": 24
+        },
+        {
+            "word": "RAI",
+            "clue": "IL PASSE FACILEMENT SOUS LA PORTE",
+            "row": 4,
+            "col": 6,
+            "direction": "H",
+            "length": 3,
+            "number": 24
+        },
+        {
+            "word": "ENTEE",
+            "clue": "MISE DANS UN TRONC",
+            "row": 4,
+            "col": 10,
+            "direction": "V",
+            "length": 5,
+            "number": 25
+        },
+        {
+            "word": "ESSE",
+            "clue": "CROCHET",
+            "row": 4,
+            "col": 10,
+            "direction": "H",
+            "length": 4,
+            "number": 25
+        },
+        {
+            "word": "EMOUSTILLANTE",
+            "clue": "GRISANTE",
+            "row": 5,
+            "col": 0,
+            "direction": "H",
+            "length": 13,
+            "number": 26
+        },
+        {
+            "word": "MITE",
+            "clue": "PAPILLON BLANC",
+            "row": 5,
+            "col": 1,
+            "direction": "V",
+            "length": 4,
+            "number": 27
+        },
+        {
+            "word": "TOM",
+            "clue": "IL JOUE AU CHAT ET À LA SOURIS",
+            "row": 5,
+            "col": 5,
+            "direction": "V",
+            "length": 3,
+            "number": 28
+        },
+        {
+            "word": "AIN",
+            "clue": "IL A SON LIT DANS LE JURA",
+            "row": 5,
+            "col": 9,
+            "direction": "V",
+            "length": 3,
+            "number": 29
+        },
+        {
+            "word": "II",
+            "clue": "MOINS DE TROIS",
+            "row": 6,
+            "col": 1,
+            "direction": "H",
+            "length": 2,
+            "number": 30
+        },
+        {
+            "word": "AOC",
+            "clue": "APPELLATION VITICOLE",
+            "row": 6,
+            "col": 4,
+            "direction": "H",
+            "length": 3,
+            "number": 31
+        },
+        {
+            "word": "LIT",
+            "clue": "GARDE MALADE",
+            "row": 6,
+            "col": 8,
+            "direction": "H",
+            "length": 3,
+            "number": 32
+        },
+        {
+            "word": "NS",
+            "clue": "INITIALES DEVANT JÉSUS",
+            "row": 6,
+            "col": 12,
+            "direction": "H",
+            "length": 2,
+            "number": 33
+        },
+        {
+            "word": "SEE",
+            "clue": "CAMILL  HOMME POLITIQUE ALSACIEN",
+            "row": 6,
+            "col": 13,
+            "direction": "V",
+            "length": 3,
+            "number": 34
+        },
+        {
+            "word": "ETEL",
+            "clue": "VILLE ET RIVIÈRE DE BRETAGNE",
+            "row": 7,
+            "col": 0,
+            "direction": "H",
+            "length": 4,
+            "number": 35
+        },
+        {
+            "word": "LA",
+            "clue": "NOTE DE MUSIQUE",
+            "row": 7,
+            "col": 3,
+            "direction": "V",
+            "length": 2,
+            "number": 36
+        },
+        {
+            "word": "MIDINETTE",
+            "clue": "GROUPIE",
+            "row": 7,
+            "col": 5,
+            "direction": "H",
+            "length": 9,
+            "number": 37
+        },
+        {
+            "word": "DO",
+            "clue": "COMME UT",
+            "row": 7,
+            "col": 7,
+            "direction": "V",
+            "length": 2,
+            "number": 38
+        },
+        {
+            "word": "TP",
+            "clue": "ABRÉVIATION SCOLAIRE",
+            "row": 7,
+            "col": 11,
+            "direction": "V",
+            "length": 2,
+            "number": 39
+        },
+        {
+            "word": "ESAU",
+            "clue": "FRÈRE DE JACOB",
+            "row": 8,
+            "col": 1,
+            "direction": "H",
+            "length": 4,
+            "number": 40
+        },
+        {
+            "word": "NOE",
+            "clue": "LE PREMIER DES MARINS",
+            "row": 8,
+            "col": 6,
+            "direction": "H",
+            "length": 3,
+            "number": 41
+        },
+        {
+            "word": "EPIE",
+            "clue": "GARDE À L'ŒIL",
+            "row": 8,
+            "col": 10,
+            "direction": "H",
+            "length": 4,
+            "number": 42
+        }
+    ],
+    "definitions_horizontal": [
+        "8. EMPLOI TRÈS RECHERCHÉ (SINECURE)",
+        "12. ESTUAIRES BRETONS (ABERS)",
+        "15. ARTICLE COURANT (LE)",
+        "16. DÉLASSER (REPOSER)",
+        "18. PRÉCISE L'ÉPOQUE (EN)",
+        "19. PLATS RURAUX (POTEES)",
+        "21. NIVEAU SUR UN TATAMI (DAN)",
+        "22. EST VOLONTAIRE (OSE)",
+        "23. T GREC (TAU)",
+        "24. IL PASSE FACILEMENT SOUS LA PORTE (RAI)",
+        "25. CROCHET (ESSE)",
+        "26. GRISANTE (EMOUSTILLANTE)",
+        "30. MOINS DE TROIS (II)",
+        "31. APPELLATION VITICOLE (AOC)",
+        "32. GARDE MALADE (LIT)",
+        "33. INITIALES DEVANT JÉSUS (NS)",
+        "35. VILLE ET RIVIÈRE DE BRETAGNE (ETEL)",
+        "37. GROUPIE (MIDINETTE)",
+        "40. FRÈRE DE JACOB (ESAU)",
+        "41. LE PREMIER DES MARINS (NOE)",
+        "42. GARDE À L'ŒIL (EPIE)"
+    ],
+    "definitions_vertical": [
+        "1. IL VEILLE AU GRAIN (SILO)",
+        "2. ARRIVÉ APRÈS AVOIR ÉTÉ ATTENDU (NE)",
+        "3. PASSAGES URBAINS (RUES)",
+        "4. QUI DATE ! (FEODAL)",
+        "5. VILLE DU CALVADOS (CAEN)",
+        "6. L'HÉLIUM (HE)",
+        "7. LICHEN FILAMENTEUX (USNEE)",
+        "9. DONNES UN COUP DE BALAI (NETTOIES)",
+        "10. APPROFONDIT (CREUSA)",
+        "11. LETTRES DEVANT UN PRÊTRE (RP)",
+        "13. BROME ABRÉGÉ (BR)",
+        "14. ÉPROUVÉ AVEC ÉMOTION (RESSENTI)",
+        "17. PARTIE QUI AVANCE (SAILLIE)",
+        "20. ELLE REMPLIT LE SEAU (EAU)",
+        "22. ARMÉE DE L'ÉPOQUE FÉODALE (OST)",
+        "24. PLANTE PURGATIVE (RICIN)",
+        "25. MISE DANS UN TRONC (ENTEE)",
+        "27. PAPILLON BLANC (MITE)",
+        "28. IL JOUE AU CHAT ET À LA SOURIS (TOM)",
+        "29. IL A SON LIT DANS LE JURA (AIN)",
+        "34. CAMILL  HOMME POLITIQUE ALSACIEN (SEE)",
+        "36. NOTE DE MUSIQUE (LA)",
+        "38. COMME UT (DO)",
+        "39. ABRÉVIATION SCOLAIRE (TP)"
+    ]
+}

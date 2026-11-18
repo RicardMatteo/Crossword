@@ -1,0 +1,79 @@
+.homepage.container {
+  max-width: 640px;
+  padding-top: 3rem;
+  padding-bottom: 4rem;
+}
+
+.home-header {
+  margin-bottom: 2rem;
+}
+
+.home-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.home-header p {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.home-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.home-card .form-label {
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.join-form {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 220px;
+}
+
+.join-form .form-input {
+  flex: 1;
+  min-width: 0;
+  text-transform: uppercase;
+}
+
+.playing-as {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.playing-as strong {
+  color: var(--text-primary);
+}
+
+.home-hint {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .homepage.container {
+    padding-top: 2rem;
+  }
+
+  .home-header h1 {
+    font-size: 1.6rem;
+  }
+}

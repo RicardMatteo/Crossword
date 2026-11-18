@@ -1,0 +1,144 @@
+.crossword-grid {
+  margin-bottom: 2rem;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  background: var(--bg-primary);
+  width: 100%;
+  max-width: none;
+}
+
+/* One CSS grid for the whole crossword: every column has exactly the same
+   width whatever the cell contains, so the rows line up */
+.crossword-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+}
+
+.crossword-row {
+  display: contents;
+}
+
+.crossword-row > * {
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
+}
+
+.cell-container {
+  display: grid;
+  position: relative;
+}
+
+.cell-container > input {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+}
+
+.clue-cell {
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Clue cells: FitText shrinks the font so whole words fit, and splits long
+   words over several lines rather than going below a readable size */
+.clue-cell {
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  overflow: hidden;
+}
+
+.clue-text {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: manual;
+  line-height: 1.1;
+}
+
+/* Soft hyphens (added by FitText) first, anywhere as a last resort */
+.clue-text.is-broken {
+  overflow-wrap: anywhere;
+}
+
+.clue-text > span {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.clue-separator {
+  width: 90%;
+  margin: 1px auto;
+  border: 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.right-triangle {
+  margin-top: 0.5em;
+  width: 0;
+  height: 0;
+  border-top: 0.5em solid transparent;
+  border-bottom: 0.5em solid transparent;
+  border-left: 0.5em solid var(--text-primary);
+  grid-area: 1 / 1;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.down-triangle {
+  margin-left: 0.5em;
+  width: 0;
+  height: 0;
+  border-left: 0.5em solid transparent;
+  border-right: 0.5em solid transparent;
+  border-top: 0.5em solid var(--text-primary);
+  grid-area: 1 / 1;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Responsive grid sizing */
+@media (max-width: 1200px) {
+  .crossword-grid {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .crossword-grid {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .crossword-grid {
+    font-size: 0.7rem;
+  }
+}
+
+/* A word just found (stream overlay): the cells flash, then settle */
+.cell-just-found {
+  animation: cell-just-found 3s ease-out;
+  font-weight: 700;
+}
+
+@keyframes cell-just-found {
+  0%,
+  40% {
+    background-color: #9146ff;
+    color: white;
+  }
+  100% {
+    background-color: var(--bg-primary);
+  }
+}

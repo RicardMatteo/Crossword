@@ -1,0 +1,54 @@
+.game-list {
+  width: 100%;
+}
+
+.game-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.game-list-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.no-games {
+  padding: 1.5rem 0;
+  color: var(--text-secondary);
+}
+
+.games-rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+}
+
+.game-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-primary);
+}
+
+.game-row + .game-row {
+  border-top: 1px solid var(--border-color);
+}
+
+.game-row-id {
+  font-weight: 600;
+  font-family: monospace;
+  color: var(--text-primary);
+  margin-right: 0.75rem;
+}
+
+.game-row-meta {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}

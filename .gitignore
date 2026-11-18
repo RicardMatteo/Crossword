@@ -312,4 +312,20 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
+# Custom (anchored to the repo root: an unanchored "utils/" also hid backend/src/utils)
 
+/db/
+/mfj/
+/old/
+/setup-ssl.sh
+/todo.md
+/utils/
+/generate/
+
+# Local dumps / backups
+*.sql.dump
+db_dump_all*.sql
+*.zip
+
+# Claude Code agent worktrees
+.claude/worktrees/

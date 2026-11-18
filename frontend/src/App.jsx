@@ -1,83 +1,54 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import CrosswordPage from './pages/CrosswordPage';
+"use client"
 
+import { useState, useEffect } from "react"
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom"
+import { ThemeProvider } from "./contexts/ThemeContext"
+import { AuthProvider } from "./contexts/AuthContext"
+import { LanguageProvider } from "./contexts/LanguageContext"
+import Navbar from "./components/layout/Navbar"
+import HomePage from "./pages/HomePage"
+import GamePage from "./pages/GamePage"
+import ProfilePage from "./pages/ProfilePage"
+import NotFoundPage from "./pages/NotFoundPage"
+import OverlayPage from "./pages/OverlayPage"
+import "./styles/globals.css"
 
-export default function App() {
-  const [roomId, setRoomId] = useState('');
-  const [name, setName] = useState(localStorage.getItem('name') || '');
-  const [joined, setJoined] = useState(false);
-
-  const navigate = useNavigate();
-  const { roomFromURL } = useParams();
-
-  // Redirection automatique si room dans l’URL et token/nom déjà présents
-  useEffect(() => {
-    const token = localStorage.getItem(`token-${roomFromURL}`);
-    const storedName = localStorage.getItem('name');
-
-    if (roomFromURL) {
-
-      if ((token && storedName) || (joined && roomId === roomFromURL)) {
-        console.log('Token et nom trouvés, redirection vers la page de jeu');
-        setRoomId(roomFromURL);
-        setName(storedName);
-        setJoined(true);
-        navigate(`/game/${roomFromURL}`);
-      } else {
-        console.log('Token ou nom manquant, redirection vers la page d\'accueil');
-        setJoined(false);
-        navigate('/');
-      }
-    }
-  }, [roomFromURL, navigate]);
-
-  const handleJoin = () => {
-    if (roomId && name) {
-      localStorage.setItem('name', name);
-      setJoined(true);
-      navigate(`/game/${roomId}`);
-    }
-  };
+/**
+ * Main App component that handles routing and global providers
+ * Implements React Router for navigation and context providers for theme, auth, and language
+ */
+function App() {
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      {!joined ? (
-        <div style={{ maxWidth: '400px', margin: 'auto' }}>
-          <h2>Rejoindre une partie</h2>
-          <input
-            type="text"
-            placeholder="Code de la partie"
-            value={roomId}
-            onChange={e => setRoomId(e.target.value)}
-            style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem' }}
-          />
-          <input
-            type="text"
-            placeholder="Votre nom"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem' }}
-          />
-          <button
-            onClick={handleJoin}
-            style={{
-              width: '105%',
-              padding: '0.5rem',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px'
-            }}
-          >
-            Rejoindre
-          </button>
-        </div>
-      ) : (
-        <div>
-          <CrosswordPage roomId={roomId} name={name} />
-        </div>
-      )}
-    </div>
-  );
+    <LanguageProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              {/* Stream overlay: full screen, no navigation */}
+              <Route path="/overlay/:channel" element={<OverlayPage />} />
+              <Route element={<SiteLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/game/:roomId" element={<GamePage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/404" element={<NotFoundPage />} />
+                <Route path="*" element={<Navigate to="/404" replace />} />
+              </Route>
+            </Routes>
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
+    </LanguageProvider>
+  )
 }
+
+const SiteLayout = () => (
+  <div className="app">
+    <Navbar />
+    <main className="main-content">
+      <Outlet />
+    </main>
+  </div>
+)
+
+export default App

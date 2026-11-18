@@ -1,15 +1,20 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import App from './App.jsx';
+import React from "react"
+import ReactDOM from "react-dom/client"
+import { HelmetProvider } from "react-helmet-async"
+import App from "./App.jsx"
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+// Google Analytics integration
+if (typeof window !== "undefined" && window.gtag) {
+  window.gtag("config", "GA_MEASUREMENT_ID", {
+    page_title: document.title,
+    page_location: window.location.href,
+  })
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/game/:roomFromURL" element={<App />} />
-      </Routes>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
+  </React.StrictMode>,
+)
